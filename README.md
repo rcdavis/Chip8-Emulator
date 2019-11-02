@@ -1,0 +1,2 @@
+# Chip8-Emulator
+A basic implementation of the Chip 8 emulator.
