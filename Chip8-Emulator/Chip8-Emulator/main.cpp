@@ -46,15 +46,14 @@ int main()
 	sf::Clock clock;
 	sf::Time elapsedTime;
 	sf::Event winEvent = {};
-	bool running = true;
-	while (running)
+	while (window.isOpen())
 	{
 		while (window.pollEvent(winEvent))
 		{
 			switch (winEvent.type)
 			{
 			case sf::Event::Closed:
-				running = false;
+				window.close();
 				break;
 			}
 		}
@@ -77,7 +76,7 @@ int main()
 				{
 					for (unsigned int x = 0; x < Chip8::SCREEN_WIDTH; ++x)
 					{
-						sf::Color pixel = (vram[(y * Chip8::SCREEN_WIDTH) + x]) ? sf::Color::White : sf::Color::Black;
+						const sf::Color pixel = (vram[(y * Chip8::SCREEN_WIDTH) + x]) ? sf::Color::White : sf::Color::Black;
 						image.setPixel(x, y, pixel);
 					}
 				}
@@ -132,7 +131,7 @@ std::string ChooseGame(Chip8& chip8, sf::RenderWindow& window)
 			{
 				gameEntries[cur].text.setFillColor(sf::Color::White);
 				if (cur == 0)
-					cur = gameEntries.size() - 1;
+					cur = std::size(gameEntries) - 1;
 				else
 					--cur;
 				gameEntries[cur].text.setFillColor(sf::Color::Green);
@@ -142,7 +141,7 @@ std::string ChooseGame(Chip8& chip8, sf::RenderWindow& window)
 			{
 				gameEntries[cur].text.setFillColor(sf::Color::White);
 				++cur;
-				if (cur >= gameEntries.size())
+				if (cur >= std::size(gameEntries))
 					cur = 0;
 				gameEntries[cur].text.setFillColor(sf::Color::Green);
 				elapsedTime = sf::Time::Zero;

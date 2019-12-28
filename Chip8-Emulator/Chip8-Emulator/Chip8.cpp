@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <fstream>
+#include <stdexcept>
 
 Chip8::Chip8()
 {
@@ -267,7 +268,7 @@ void Chip8::EmulateCycle()
 				{
 					const unsigned short index = posX + x + ((posY + y) * SCREEN_WIDTH);
 					// TODO: The index can access out of bounds. Should figure out why.
-					if (index < 0 || index >= mVram.size())
+					if (index < 0 || index >= std::size(mVram))
 						continue;
 
 					if (mVram[index])
@@ -323,7 +324,7 @@ void Chip8::EmulateCycle()
 		{
 			bool keyPressed = false;
 
-			for (unsigned char i = 0; i < mKeys.size(); ++i)
+			for (unsigned char i = 0; i < std::size(mKeys); ++i)
 			{
 				if (mKeys[i])
 				{
@@ -387,7 +388,7 @@ void Chip8::EmulateCycle()
 
 		case 0x0055: // 0xFX55 Stores V0 to VX (including VX) in memory starting at address I
 		{
-			memcpy(mMemory.data() + mIndexReg, mV.data(), (mOpcode & 0x0F00) >> 8);
+			memcpy(std::data(mMemory) + mIndexReg, std::data(mV), (mOpcode & 0x0F00) >> 8);
 
 			// On the original interpreter, when the operation is done, I = I + X + 1.
 			mIndexReg += ((mOpcode & 0x0F00) >> 8) + 1;
@@ -397,7 +398,7 @@ void Chip8::EmulateCycle()
 
 		case 0x0065: // 0xFX65 Fills V0 to VX (including VX) with values from memory starting at address I
 		{
-			memcpy(mV.data(), mMemory.data() + mIndexReg, (mOpcode & 0x0F00) >> 8);
+			memcpy(std::data(mV), std::data(mMemory) + mIndexReg, (mOpcode & 0x0F00) >> 8);
 
 			// On the original interpreter, when the operation is done, I = I + X + 1.
 			mIndexReg += ((mOpcode & 0x0F00) >> 8) + 1;
@@ -426,11 +427,17 @@ void Chip8::LoadGame(std::filesystem::path game)
 	Init();
 
 	if (game.extension() != std::filesystem::path(".c8"))
-		return;
+	{
+		std::string error = game.generic_string() + " isn't a .c8 file";
+		throw std::invalid_argument(error);
+	}
 
 	std::ifstream f(game, std::ios_base::in | std::ios_base::binary);
 	if (!f.is_open())
-		return;
+	{
+		std::string error = "Unable to open game: " + game.generic_string();
+		throw std::invalid_argument(error);
+	}
 
 	const size_t fileSize = std::filesystem::file_size(game);
 
@@ -456,10 +463,10 @@ void Chip8::SetFrameRate(unsigned int fps)
 
 unsigned char* Chip8::GetVram()
 {
-	return mVram.data();
+	return std::data(mVram);
 }
 
 unsigned char* Chip8::GetKeys()
 {
-	return mKeys.data();
+	return std::data(mKeys);
 }
