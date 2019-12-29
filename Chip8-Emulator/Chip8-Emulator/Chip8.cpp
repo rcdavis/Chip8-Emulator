@@ -33,7 +33,7 @@ void Chip8::Init()
 
 	mRedraw = true;
 
-	const std::array<const unsigned char, 80> fontSet =
+	const std::array<const uint8_t, 80> fontSet =
 	{
 		0xF0, 0x90, 0x90, 0x90, 0xF0, //0
 		0x20, 0x60, 0x20, 0x20, 0x70, //1
@@ -253,20 +253,20 @@ void Chip8::EmulateCycle()
 	 */
 	case 0xD000:
 	{
-		const unsigned short posX = mV[(mOpcode & 0x0F00) >> 8];
-		const unsigned short posY = mV[(mOpcode & 0x00F0) >> 4];
-		const unsigned short width = 8;
-		const unsigned short height = mOpcode & 0x000F;
+		const uint16_t posX = mV[(mOpcode & 0x0F00) >> 8];
+		const uint16_t posY = mV[(mOpcode & 0x00F0) >> 4];
+		const uint16_t width = 8;
+		const uint16_t height = mOpcode & 0x000F;
 		mV[0xF] = 0;
 
-		for (unsigned short y = 0; y < height; ++y)
+		for (uint16_t y = 0; y < height; ++y)
 		{
-			const unsigned short pixel = mMemory[mIndexReg + y];
-			for (unsigned short x = 0; x < width; ++x)
+			const uint16_t pixel = mMemory[mIndexReg + y];
+			for (uint16_t x = 0; x < width; ++x)
 			{
 				if (pixel & (0x80 >> x))
 				{
-					const unsigned short index = posX + x + ((posY + y) * SCREEN_WIDTH);
+					const uint16_t index = posX + x + ((posY + y) * SCREEN_WIDTH);
 					// TODO: The index can access out of bounds. Should figure out why.
 					if (index < 0 || index >= std::size(mVram))
 						continue;
@@ -324,7 +324,7 @@ void Chip8::EmulateCycle()
 		{
 			bool keyPressed = false;
 
-			for (unsigned char i = 0; i < std::size(mKeys); ++i)
+			for (uint8_t i = 0; i < std::size(mKeys); ++i)
 			{
 				if (mKeys[i])
 				{
@@ -428,14 +428,14 @@ void Chip8::LoadGame(std::filesystem::path game)
 
 	if (game.extension() != std::filesystem::path(".c8"))
 	{
-		std::string error = game.generic_string() + " isn't a .c8 file";
+		const std::string error = game.generic_string() + " isn't a .c8 file";
 		throw std::invalid_argument(error);
 	}
 
 	std::ifstream f(game, std::ios_base::in | std::ios_base::binary);
 	if (!f.is_open())
 	{
-		std::string error = "Unable to open game: " + game.generic_string();
+		const std::string error = "Unable to open game: " + game.generic_string();
 		throw std::invalid_argument(error);
 	}
 
@@ -446,27 +446,27 @@ void Chip8::LoadGame(std::filesystem::path game)
 	f.close();
 }
 
-unsigned short Chip8::GetOpcode() const
+uint16_t Chip8::GetOpcode() const
 {
 	return (mMemory[mPC] << 8) | mMemory[mPC + 1];
 }
 
-unsigned int Chip8::GetFrameRate() const
+uint32_t Chip8::GetFrameRate() const
 {
 	return mFrameRate;
 }
 
-void Chip8::SetFrameRate(unsigned int fps)
+void Chip8::SetFrameRate(uint32_t fps)
 {
 	mFrameRate = fps;
 }
 
-unsigned char* Chip8::GetVram()
+uint8_t* Chip8::GetVram()
 {
 	return std::data(mVram);
 }
 
-unsigned char* Chip8::GetKeys()
+uint8_t* Chip8::GetKeys()
 {
 	return std::data(mKeys);
 }

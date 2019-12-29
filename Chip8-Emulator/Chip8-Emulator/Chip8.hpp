@@ -5,56 +5,61 @@
 #include <array>
 #include <filesystem>
 #include <functional>
+#include <cstdint>
+
+using std::uint8_t;
+using std::uint16_t;
+using std::uint32_t;
 
 class Chip8
 {
 public:
-	static constexpr unsigned short SCREEN_WIDTH = 64;
-	static constexpr unsigned short SCREEN_HEIGHT = 32;
-	static constexpr unsigned short VRAM_SIZE = SCREEN_WIDTH * SCREEN_HEIGHT;
+	static constexpr uint16_t SCREEN_WIDTH = 64;
+	static constexpr uint16_t SCREEN_HEIGHT = 32;
+	static constexpr uint16_t VRAM_SIZE = SCREEN_WIDTH * SCREEN_HEIGHT;
 
 	Chip8();
 
-	void SetInputFunc(std::function<void(std::array<unsigned char, 16>&)> func) { mInputFunc = func; }
-	void SetRenderFunc(std::function<void(const std::array<unsigned char, VRAM_SIZE>&)> func) { mRenderFunc = func; }
+	void SetInputFunc(std::function<void(std::array<uint8_t, 16>&)> func) { mInputFunc = func; }
+	void SetRenderFunc(std::function<void(const std::array<uint8_t, VRAM_SIZE>&)> func) { mRenderFunc = func; }
 
 	void LoadGame(std::filesystem::path game);
 
 	void EmulateCycle();
 
-	unsigned int GetFrameRate() const;
-	void SetFrameRate(unsigned int fps);
+	uint32_t GetFrameRate() const;
+	void SetFrameRate(uint32_t fps);
 
-	unsigned char* GetVram();
-	unsigned char* GetKeys();
+	uint8_t* GetVram();
+	uint8_t* GetKeys();
 
 	bool mRedraw;
 
 private:
 	void Init();
 
-	unsigned short GetOpcode() const;
+	uint16_t GetOpcode() const;
 
-	std::function<void(const std::array<unsigned char, VRAM_SIZE>&)> mRenderFunc;
-	std::function<void(std::array<unsigned char, 16>&)> mInputFunc;
+	std::function<void(const std::array<uint8_t, VRAM_SIZE>&)> mRenderFunc;
+	std::function<void(std::array<uint8_t, 16>&)> mInputFunc;
 
-	std::array<unsigned char, 4096> mMemory;
-	std::array<unsigned char, 16> mV;
-	std::array<unsigned char, VRAM_SIZE> mVram;
+	std::array<uint8_t, 4096> mMemory;
+	std::array<uint8_t, 16> mV;
+	std::array<uint8_t, VRAM_SIZE> mVram;
 
-	unsigned short mOpcode;
-	unsigned short mIndexReg;
-	unsigned short mPC;
+	uint16_t mOpcode;
+	uint16_t mIndexReg;
+	uint16_t mPC;
 
-	std::array<unsigned short, 16> mStack;
-	unsigned short mSP;
+	std::array<uint16_t, 16> mStack;
+	uint16_t mSP;
 
-	std::array<unsigned char, 16> mKeys;
+	std::array<uint8_t, 16> mKeys;
 
-	unsigned char mDelayTimer;
-	unsigned char mSoundTimer;
+	uint8_t mDelayTimer;
+	uint8_t mSoundTimer;
 
-	unsigned int mFrameRate;
+	uint32_t mFrameRate;
 };
 
 #endif

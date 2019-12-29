@@ -71,7 +71,7 @@ int main()
 
 			if (chip8.mRedraw)
 			{
-				const unsigned char* vram = chip8.GetVram();
+				const uint8_t* vram = chip8.GetVram();
 				for (unsigned int y = 0; y < Chip8::SCREEN_HEIGHT; ++y)
 				{
 					for (unsigned int x = 0; x < Chip8::SCREEN_WIDTH; ++x)
@@ -207,7 +207,7 @@ std::vector<GameEntry> LoadGames()
 
 void UpdateInput(Chip8& chip8)
 {
-	unsigned char* keys = chip8.GetKeys();
+	uint8_t* keys = chip8.GetKeys();
 
 	keys[0x1] = (sf::Keyboard::isKeyPressed(sf::Keyboard::Num1)) ? 1 : 0;
 	keys[0x2] = (sf::Keyboard::isKeyPressed(sf::Keyboard::Num2)) ? 1 : 0;
