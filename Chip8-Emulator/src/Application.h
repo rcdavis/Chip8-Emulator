@@ -1,0 +1,37 @@
+#pragma once
+
+#include "Chip8.h"
+
+#include <vector>
+#include <string>
+#include <filesystem>
+
+struct GLFWwindow;
+
+class Application
+{
+public:
+    Application() = default;
+    ~Application();
+
+    bool Init();
+    void Shutdown();
+
+    void Run();
+    void UpdateInput();
+
+private:
+    struct GameEntry
+    {
+        std::string name;
+        std::filesystem::path filepath;
+    };
+
+    std::vector<GameEntry> GetGameList();
+    std::filesystem::path ChooseGame();
+    static void ErrorCallback(int error, const char* description);
+
+private:
+    Chip8 mChip8;
+    GLFWwindow* mWindow = nullptr;
+};
