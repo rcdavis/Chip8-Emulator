@@ -2,8 +2,6 @@
 
 #include "Types.h"
 
-#include <glad/glad.h>
-
 class OpenGLShader
 {
 public:
@@ -14,8 +12,8 @@ public:
     void Create(const char* const vertexSrc, const char* const fragmentSrc);
     void Delete();
 
-    void Bind() const { glUseProgram(mId); }
-    void Unbind() const { glUseProgram(0); }
+    void Bind() const;
+    void Unbind() const;
 
     void SetVertexAttribf(
         const char* const name,

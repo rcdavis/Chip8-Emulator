@@ -9,6 +9,15 @@
 #include <fstream>
 #include <array>
 
+struct Vertex
+{
+    float posX = 0.0f;
+    float posY = 0.0f;
+
+    float texCoordS = 0.0f;
+    float texCoordT = 0.0f;
+};
+
 Application::~Application()
 {
     TestShutdown();
@@ -107,7 +116,6 @@ void Application::Run()
             glClear(GL_COLOR_BUFFER_BIT);
 
             glBindVertexArray(mVAO);
-            mShader.Bind();
 
             //const auto image = mChip8.GetVram();
             const auto image = std::data(mChip8.GetVramImage());
@@ -195,16 +203,30 @@ void Application::ErrorCallback(int error, const char* description)
 void Application::InitVertexBuffer()
 {
     // 2 for position, 2 for texture coordinates
-    constexpr std::array<float, 16> vertices = {
+    /*constexpr std::array<float, 16> vertices = {
         -1.0f, -1.0f, 0.0f, 0.0f,
         1.0f, -1.0f, 1.0f, 0.0f,
         1.0f, 1.0f, 1.0f, 1.0f,
         -1.0f, 1.0f, 0.0f, 1.0f
-    };
+    };*/
+
+    /*constexpr std::array<float, 8> vertices = {
+        -1.0f, -1.0f,
+        1.0f, -1.0f,
+        1.0f, 1.0f,
+        -1.0f, 1.0f
+    };*/
+
+    constexpr std::array<Vertex, 4> vertices = {{
+        { -1.0f, -1.0f, 0.0f, 0.0f },
+        { 1.0f, -1.0f, 1.0f, 0.0f },
+        { 1.0f, 1.0f, 1.0f, 1.0f },
+        { -1.0f, 1.0f, 0.0f, 1.0f }
+    }};
 
     glGenBuffers(1, &mVertexBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * std::size(vertices), std::data(vertices), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * std::size(vertices), std::data(vertices), GL_STATIC_DRAW);
 }
 
 void Application::InitIndexBuffer()
@@ -244,15 +266,18 @@ void Application::InitShader()
 
     constexpr char* fragmentSrc = "#version 450 core\n"
         "layout(location = 0) in vec2 v_TexCoord;\n"
-        "layout(location = 0) out vec4 color;\n"
+        "out vec4 color;\n"
         "layout(binding = 0) uniform sampler2D u_Texture;\n"
         "void main() {\n"
         "color = texture(u_Texture, v_TexCoord);\n"
+        //"color = vec4(1.0, 1.0, 1.0, 1.0);\n"
         "}";
 
     mShader.Create(vertexSrc, fragmentSrc);
-    mShader.SetVertexAttribf("a_Position", 2, sizeof(float) * 2);
-    mShader.SetVertexAttribf("a_TexCoord", 2, sizeof(float) * 2, sizeof(float) * 2);
+    mShader.Bind();
+    //mShader.SetVertexAttribf("a_Position", 2);
+    mShader.SetVertexAttribf("a_Position", 2, sizeof(Vertex));
+    mShader.SetVertexAttribf("a_TexCoord", 2, sizeof(Vertex), sizeof(float) * 2);
 }
 
 void Application::InitTestVertexBuffer()

@@ -2,6 +2,7 @@
 
 #include "Log.h"
 
+#include <glad/glad.h>
 #include <vector>
 
 OpenGLShader::OpenGLShader(const char* const vertexSrc, const char* const fragmentSrc)
@@ -56,7 +57,7 @@ void OpenGLShader::Create(const char* const vertexSrc, const char* const fragmen
         glDeleteShader(vertShader);
         glDeleteShader(fragShader);
 
-        LOG_ERROR("{}", std::data(infoLog));
+        LOG_ERROR("Failed to link shader: {}", std::data(infoLog));
         MAKE_ASSERT(false, "Shader link failure");
     }
 
@@ -99,6 +100,16 @@ void OpenGLShader::Delete()
         glDeleteProgram(mId);
         mId = 0;
     }
+}
+
+void OpenGLShader::Bind() const
+{
+    glUseProgram(mId);
+}
+
+void OpenGLShader::Unbind() const
+{
+    glUseProgram(0);
 }
 
 void OpenGLShader::SetVertexAttribf(
