@@ -30,6 +30,8 @@ public:
 	uint8_t* GetVram();
 	uint8_t* GetKeys();
 
+    std::array<uint32_t, VRAM_SIZE> GetVramImage();
+
 	bool mRedraw;
 
 private:

@@ -432,7 +432,7 @@ void Chip8::LoadGame(const std::filesystem::path& game)
 	}
 
 	std::ifstream f(game, std::ios_base::in | std::ios_base::binary);
-	if (!f.is_open())
+	if (!f)
 	{
 		const std::string error = "Unable to open game: " + game.generic_string();
 		throw std::invalid_argument(error);
@@ -468,4 +468,13 @@ uint8_t* Chip8::GetVram()
 uint8_t* Chip8::GetKeys()
 {
 	return std::data(mKeys);
+}
+
+std::array<uint32_t, Chip8::VRAM_SIZE> Chip8::GetVramImage()
+{
+    std::array<uint32_t, VRAM_SIZE> image = {};
+    for (uint32_t i = 0; i < VRAM_SIZE; ++i)
+        image[i] = (mVram[i] == 1) ? 0xFFFFFFFF : 0;
+
+    return image;
 }

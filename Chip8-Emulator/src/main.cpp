@@ -7,12 +7,12 @@ int main()
     Log::Init();
 
     Application app;
-    if (!app.Init())
+    if (!app.TestInit())
         return -1;
 
-    app.Run();
+    app.TestRun();
 
-    app.Shutdown();
+    app.TestShutdown();
 
 	return 0;
 }
