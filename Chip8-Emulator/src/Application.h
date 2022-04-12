@@ -21,10 +21,6 @@ public:
     void Run();
     void UpdateInput();
 
-    bool TestInit();
-    void TestShutdown();
-    void TestRun();
-
 private:
     struct GameEntry
     {
@@ -41,19 +37,12 @@ private:
     void InitTexture();
     void InitShader();
 
-    void InitTestVertexBuffer();
-    void InitTestShader();
-
 private:
     Chip8 mChip8;
     GLFWwindow* mWindow = nullptr;
     uint32_t mVAO = 0;
     uint32_t mVertexBuffer = 0;
     uint32_t mIndexBuffer = 0;
-    uint32_t mPBO = 0;
     uint32_t mTexture = 0;
     OpenGLShader mShader;
-
-    uint32_t mTestVB = 0;
-    OpenGLShader mTestShader;
 };

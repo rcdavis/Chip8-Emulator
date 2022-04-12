@@ -20,7 +20,7 @@ struct Vertex
 
 Application::~Application()
 {
-    TestShutdown();
+    Shutdown();
 }
 
 bool Application::Init()
@@ -37,7 +37,6 @@ bool Application::Init()
         return false;
 
     mWindow = glfwCreateWindow(640, 480, "Chip8 Emulator", nullptr, nullptr);
-    //mWindow = glfwCreateWindow(Chip8::SCREEN_WIDTH, Chip8::SCREEN_HEIGHT, "Chip8 Emulator", nullptr, nullptr);
     if (!mWindow)
         return false;
 
@@ -68,12 +67,6 @@ void Application::Shutdown()
     {
         glDeleteTextures(1, &mTexture);
         mTexture = 0;
-    }
-
-    if (mPBO)
-    {
-        glDeleteBuffers(1, &mPBO);
-        mPBO = 0;
     }
 
     if (mVertexBuffer)
@@ -117,9 +110,9 @@ void Application::Run()
 
             glBindVertexArray(mVAO);
 
-            //const auto image = mChip8.GetVram();
-            const auto image = std::data(mChip8.GetVramImage());
-            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, Chip8::SCREEN_WIDTH, Chip8::SCREEN_HEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, image);
+            const auto vramImage = mChip8.GetVramImage();
+            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, Chip8::SCREEN_WIDTH, Chip8::SCREEN_HEIGHT,
+                GL_RGBA, GL_UNSIGNED_BYTE, std::data(vramImage));
 
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, nullptr);
 
@@ -203,25 +196,11 @@ void Application::ErrorCallback(int error, const char* description)
 void Application::InitVertexBuffer()
 {
     // 2 for position, 2 for texture coordinates
-    /*constexpr std::array<float, 16> vertices = {
-        -1.0f, -1.0f, 0.0f, 0.0f,
-        1.0f, -1.0f, 1.0f, 0.0f,
-        1.0f, 1.0f, 1.0f, 1.0f,
-        -1.0f, 1.0f, 0.0f, 1.0f
-    };*/
-
-    /*constexpr std::array<float, 8> vertices = {
-        -1.0f, -1.0f,
-        1.0f, -1.0f,
-        1.0f, 1.0f,
-        -1.0f, 1.0f
-    };*/
-
     constexpr std::array<Vertex, 4> vertices = {{
-        { -1.0f, -1.0f, 0.0f, 0.0f },
-        { 1.0f, -1.0f, 1.0f, 0.0f },
-        { 1.0f, 1.0f, 1.0f, 1.0f },
-        { -1.0f, 1.0f, 0.0f, 1.0f }
+        { -1.0f, -1.0f, 0.0f, 1.0f },
+        { 1.0f, -1.0f, 1.0f, 1.0f },
+        { 1.0f, 1.0f, 1.0f, 0.0f },
+        { -1.0f, 1.0f, 0.0f, 0.0f }
     }};
 
     glGenBuffers(1, &mVertexBuffer);
@@ -247,8 +226,8 @@ void Application::InitTexture()
     glGenTextures(1, &mTexture);
     glBindTexture(GL_TEXTURE_2D, mTexture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, Chip8::SCREEN_WIDTH, Chip8::SCREEN_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-    glTextureParameteri(mTexture, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTextureParameteri(mTexture, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTextureParameteri(mTexture, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTextureParameteri(mTexture, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTextureParameteri(mTexture, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTextureParameteri(mTexture, GL_TEXTURE_WRAP_T, GL_REPEAT);
 }
@@ -261,7 +240,7 @@ void Application::InitShader()
         "layout(location = 0) out vec2 v_TexCoord;\n"
         "void main() {\n"
         "v_TexCoord = a_TexCoord;\n"
-        "gl_Position = vec4(a_Position, 0.5, 1.0);\n"
+        "gl_Position = vec4(a_Position, 0.0, 1.0);\n"
         "}";
 
     constexpr char* fragmentSrc = "#version 450 core\n"
@@ -270,122 +249,10 @@ void Application::InitShader()
         "layout(binding = 0) uniform sampler2D u_Texture;\n"
         "void main() {\n"
         "color = texture(u_Texture, v_TexCoord);\n"
-        //"color = vec4(1.0, 1.0, 1.0, 1.0);\n"
         "}";
 
     mShader.Create(vertexSrc, fragmentSrc);
     mShader.Bind();
-    //mShader.SetVertexAttribf("a_Position", 2);
     mShader.SetVertexAttribf("a_Position", 2, sizeof(Vertex));
     mShader.SetVertexAttribf("a_TexCoord", 2, sizeof(Vertex), sizeof(float) * 2);
-}
-
-void Application::InitTestVertexBuffer()
-{
-    constexpr std::array<float, 8> vertices = {
-        -0.5f, -0.5f,
-        0.5f, -0.5f,
-        0.5f, 0.5f,
-        -0.5f, 0.5f
-    };
-
-    glGenBuffers(1, &mTestVB);
-    glBindBuffer(GL_ARRAY_BUFFER, mTestVB);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * std::size(vertices), std::data(vertices), GL_STATIC_DRAW);
-}
-
-bool Application::TestInit()
-{
-    glfwSetErrorCallback(ErrorCallback);
-
-    if (!glfwInit())
-        return false;
-
-    mWindow = glfwCreateWindow(640, 480, "Test Window", nullptr, nullptr);
-    if (!mWindow)
-        return false;
-
-    glfwMakeContextCurrent(mWindow);
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-        return false;
-
-    glfwSwapInterval(1);
-
-    glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
-
-    glCreateVertexArrays(1, &mVAO);
-    glBindVertexArray(mVAO);
-
-    InitTestVertexBuffer();
-    InitIndexBuffer();
-    InitTestShader();
-
-    return true;
-}
-
-void Application::TestShutdown()
-{
-    mTestShader.Delete();
-
-    if (mTestVB)
-    {
-        glDeleteBuffers(1, &mTestVB);
-        mTestVB = 0;
-    }
-
-    if (mIndexBuffer)
-    {
-        glDeleteBuffers(1, &mIndexBuffer);
-        mIndexBuffer = 0;
-    }
-
-    if (mVAO)
-    {
-        glDeleteVertexArrays(1, &mVAO);
-        mVAO = 0;
-    }
-
-    if (mWindow)
-    {
-        glfwDestroyWindow(mWindow);
-        mWindow = nullptr;
-    }
-
-    glfwTerminate();
-}
-
-void Application::InitTestShader()
-{
-    constexpr char* vertexSrc = "#version 450 core\n"
-        "layout(location = 0) in vec2 a_Position;\n"
-        "void main() {\n"
-        "gl_Position = vec4(a_Position, 0.0, 1.0);\n"
-        "}";
-
-    constexpr char* fragmentSrc = "#version 450 core\n"
-        "out vec4 color;\n"
-        "void main() {\n"
-        "color = vec4(1.0, 1.0, 1.0, 1.0);\n"
-        "}";
-
-    mTestShader.Create(vertexSrc, fragmentSrc);
-    mTestShader.Bind();
-    mTestShader.SetVertexAttribf("a_Position", 2);
-}
-
-void Application::TestRun()
-{
-    while (!glfwWindowShouldClose(mWindow))
-    {
-        const TimeStep ts = (float)glfwGetTime();
-
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        glBindVertexArray(mVAO);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, nullptr);
-
-        glfwSwapBuffers(mWindow);
-
-        glfwPollEvents();
-    }
 }
