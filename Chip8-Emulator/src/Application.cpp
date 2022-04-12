@@ -102,6 +102,7 @@ void Application::Run()
     {
         const TimeStep ts = (float)glfwGetTime();
 
+        UpdateInput();
         mChip8.EmulateCycle();
 
         if (mChip8.mRedraw)
@@ -117,6 +118,8 @@ void Application::Run()
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, nullptr);
 
             glfwSwapBuffers(mWindow);
+
+            mChip8.mRedraw = false;
         }
 
         glfwPollEvents();
