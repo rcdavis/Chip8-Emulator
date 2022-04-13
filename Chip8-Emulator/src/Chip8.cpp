@@ -175,7 +175,6 @@ void Chip8::EmulateCycle()
 			mV[0xF] = (mV[(mOpcode & 0x0F00) >> 8] + mV[(mOpcode & 0x00F0) >> 4] > 0xFF) ? 1 : 0;
 			mV[(mOpcode & 0x0F00) >> 8] += mV[(mOpcode & 0x00F0) >> 4];
 			mPC += 2;
-			//if (mV[(mOpcode & 0x0F00) >> 8] + mV[(mOpcode & 0x00F0) >> 4] > 255)
 		}
 		break;
 
@@ -425,9 +424,10 @@ void Chip8::LoadGame(const std::filesystem::path& game)
 {
 	Init();
 
-	if (game.extension() != std::filesystem::path(".c8"))
+	if (game.extension() != std::filesystem::path(".c8") &&
+        game.extension() != std::filesystem::path(".ch8"))
 	{
-		const std::string error = game.generic_string() + " isn't a .c8 file";
+		const std::string error = game.generic_string() + " isn't a .c8 or .ch8 file";
 		throw std::invalid_argument(error);
 	}
 
@@ -441,7 +441,6 @@ void Chip8::LoadGame(const std::filesystem::path& game)
 	const size_t fileSize = std::filesystem::file_size(game);
 
 	f.read((char*)std::data(mMemory) + 512, fileSize);
-
 	f.close();
 }
 

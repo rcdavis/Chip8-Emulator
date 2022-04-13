@@ -187,8 +187,8 @@ std::filesystem::path Application::ChooseGame()
         return {};
     }
 
-    // TODO: Make able to choose
-    return games.front().filepath;
+    // TODO: Make able to choose a game
+    return games[3].filepath;
 }
 
 void Application::ErrorCallback(int error, const char* description)

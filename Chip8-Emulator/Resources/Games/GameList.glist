@@ -1,3 +1,11 @@
 Pong=Resources/Games/pong2.c8
 Space Invaders=Resources/Games/invaders.c8
 Tetris=Resources/Games/tetris.c8
+Slippery Slope=Resources/Games/slipperyslope.ch8
+Flight Runner=Resources/Games/flightrunner.ch8
+Ghost Escape=Resources/Games/ghostescape.ch8
+Octo: A Chip8 Story=Resources/Games/octoachip8story.ch8
+Pet Dog=Resources/Games/petdog.ch8
+8CE Attourny - Disc 1=Resources/Games/8ceattourny_d1.ch8
+8CE Attourny - Disc 2=Resources/Games/8ceattourny_d2.ch8
+8CE Attourny - Disc 3=Resources/Games/8ceattourny_d3.ch8
