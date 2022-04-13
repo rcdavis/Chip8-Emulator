@@ -31,8 +31,18 @@
 *.out
 *.app
 
-Debug/
-Release/
-.vs/
+!vendor/Premake/premake5.exe
 
+# VS
+.vs/
+*.sln
+*.vcxproj
 *.vcxproj.user
+*.vcxproj.filters
+
+**/Build/
+**/Bin/
+**/Obj/
+
+*.log
+*.tlog
