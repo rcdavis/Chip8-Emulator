@@ -188,7 +188,7 @@ std::filesystem::path Application::ChooseGame()
     }
 
     // TODO: Make able to choose a game
-    return games[3].filepath;
+    return games[0].filepath;
 }
 
 void Application::ErrorCallback(int error, const char* description)
@@ -208,7 +208,8 @@ void Application::InitVertexBuffer()
 
     glGenBuffers(1, &mVertexBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * std::size(vertices), std::data(vertices), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * std::size(vertices),
+        std::data(vertices), GL_STATIC_DRAW);
 }
 
 void Application::InitIndexBuffer()
@@ -220,7 +221,8 @@ void Application::InitIndexBuffer()
 
     glGenBuffers(1, &mIndexBuffer);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndexBuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * std::size(indices), std::data(indices), GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * std::size(indices),
+        std::data(indices), GL_STATIC_DRAW);
 }
 
 void Application::InitTexture()
@@ -228,7 +230,8 @@ void Application::InitTexture()
     glActiveTexture(GL_TEXTURE0);
     glGenTextures(1, &mTexture);
     glBindTexture(GL_TEXTURE_2D, mTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, Chip8::SCREEN_WIDTH, Chip8::SCREEN_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, Chip8::SCREEN_WIDTH, Chip8::SCREEN_HEIGHT,
+        0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
     glTextureParameteri(mTexture, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTextureParameteri(mTexture, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTextureParameteri(mTexture, GL_TEXTURE_WRAP_S, GL_REPEAT);

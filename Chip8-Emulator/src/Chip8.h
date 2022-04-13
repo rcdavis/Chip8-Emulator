@@ -32,6 +32,18 @@ public:
 
     std::array<uint32_t, VRAM_SIZE> GetVramImage();
 
+    uint8_t GetVX() const { return mV[(mOpcode & 0x0F00) >> 8]; }
+    void SetVX(const uint8_t v) { mV[(mOpcode & 0x0F00) >> 8] = v; }
+
+    uint8_t GetVY() const { return mV[(mOpcode & 0x00F0) >> 4]; }
+    void SetVY(const uint8_t v) { mV[(mOpcode & 0x00F0) >> 4] = v; }
+
+    uint8_t GetVF() const { return mV[0xF]; }
+    void SetVF(const uint8_t v) { mV[0xF] = v; }
+
+    uint8_t GetNN() const { return mOpcode & 0x00FF; }
+    uint16_t GetAddress() const { return mOpcode & 0x0FFF; }
+
 	bool mRedraw;
 
 private:
