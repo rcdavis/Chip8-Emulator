@@ -56,8 +56,15 @@ bool Application::Init()
     InitTexture();
     InitShader();
 
+    glfwSetWindowUserPointer(mWindow, this);
+
     glfwSetFramebufferSizeCallback(mWindow, [](GLFWwindow* window, int width, int height) {
         glViewport(0, 0, width, height);
+    });
+
+    glfwSetKeyCallback(mWindow, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
+        Application& app = *(Application*)glfwGetWindowUserPointer(window);
+        app.KeyCallback(key, scancode, action, mods);
     });
 
     return true;
@@ -153,6 +160,17 @@ void Application::UpdateInput()
     keys[0x0] = (glfwGetKey(mWindow, GLFW_KEY_X) == GLFW_PRESS) ? 1 : 0;
     keys[0xB] = (glfwGetKey(mWindow, GLFW_KEY_C) == GLFW_PRESS) ? 1 : 0;
     keys[0xF] = (glfwGetKey(mWindow, GLFW_KEY_V) == GLFW_PRESS) ? 1 : 0;
+}
+
+void Application::KeyCallback(int key, int scancode, int action, int mods)
+{
+    if (action == GLFW_RELEASE)
+    {
+        if (key == GLFW_KEY_F1)
+            mChip8.SaveState();
+        else if (key == GLFW_KEY_F2)
+            mChip8.LoadState();
+    }
 }
 
 std::vector<Application::GameEntry> Application::GetGameList()

@@ -46,3 +46,6 @@
 
 *.log
 *.tlog
+
+# Save State Files
+*.c8state
