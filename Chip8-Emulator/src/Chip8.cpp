@@ -14,11 +14,11 @@ Chip8::Chip8()
 
 void Chip8::Init()
 {
-    std::fill(std::begin(mMemory), std::end(mMemory), 0);
-    std::fill(std::begin(mV), std::end(mV), 0);
-    std::fill(std::begin(mVram), std::end(mVram), 0);
-    std::fill(std::begin(mStack), std::end(mStack), 0);
-    std::fill(std::begin(mKeys), std::end(mKeys), 0);
+    mMemory.fill(0);
+    mV.fill(0);
+    mVram.fill(0);
+    mStack.fill(0);
+    mKeys.fill(0);
 
     mOpcode = 0;
 
@@ -69,7 +69,7 @@ void Chip8::EmulateCycle()
         {
         case 0x0000: // 0x00E0: Clears the screen
         {
-            std::fill(std::begin(mVram), std::end(mVram), 0);
+            mVram.fill(0);
             mRedraw = true;
         }
         break;
@@ -99,7 +99,7 @@ void Chip8::EmulateCycle()
     }
     break;
 
-    case 0x4000: // 0x4XNN Skips next instruction if VX doesn't equals NN
+    case 0x4000: // 0x4XNN Skips next instruction if VX does not equal NN
     {
         if (GetVX() != GetNN())
             mPC += 2;
@@ -117,7 +117,7 @@ void Chip8::EmulateCycle()
         SetVX(GetNN());
         break;
 
-    case 0x7000: // 0x7XNN Adds NN to VX
+    case 0x7000: // 0x7XNN Adds NN to VX (Carry flag is not changed)
         SetVX(GetVX() + GetNN());
         break;
 
@@ -161,7 +161,7 @@ void Chip8::EmulateCycle()
         }
         break;
 
-        case 0x0006: // 0x8XY6 Shifts VX right by one. VF set to the value of least significant bit of VX before shift
+        case 0x0006: // 0x8XY6 Stores the least significant bit of VX in VF and then shifts VX to the right by 1.
         {
             SetVF(GetVX() & 0x1);
             SetVX(GetVX() >> 1);
@@ -178,7 +178,7 @@ void Chip8::EmulateCycle()
         }
         break;
 
-        case 0x000E: // 0x8XYE Shifts VX left by one. VF is set to the value of the most significant bit of VX before the shift.
+        case 0x000E: // 0x8XYE Stores the most significant bit of VX in VF and then shifts VX to the left by 1.
         {
             SetVF(GetVX() >> 7);
             SetVX(GetVX() << 1);
@@ -188,7 +188,7 @@ void Chip8::EmulateCycle()
     }
     break;
 
-    case 0x9000: // 0x9XY0 Skips the next instruction if VX doesn't equal VY
+    case 0x9000: // 0x9XY0 Skips the next instruction if VX does not equal VY
     {
         if (GetVX() != GetVY())
             mPC += 2;
@@ -210,14 +210,12 @@ void Chip8::EmulateCycle()
     /*
      * 0xDXYN
      * Draws a sprite at coordinate (VX, VY) that has a width of 8 pixels and a height of N pixels.
-     * Each row of 8 pixels is read as bit-coded starting from memory location I; I value doesn’t change
+     * Each row of 8 pixels is read as bit-coded starting from memory location I; I value does not change
      * after the execution of this instruction. As described above, VF is set to 1 if any screen pixels
-     * are flipped from set to unset when the sprite is drawn, and to 0 if that doesn’t happen
+     * are flipped from set to unset when the sprite is drawn, and to 0 if that does not happen
      */
     case 0xD000:
     {
-        const uint16_t posX = mV[(mOpcode & 0x0F00) >> 8];
-        const uint16_t posY = mV[(mOpcode & 0x00F0) >> 4];
         const uint16_t height = mOpcode & 0x000F;
         constexpr uint16_t width = 8;
         mV[0xF] = 0;
@@ -229,7 +227,7 @@ void Chip8::EmulateCycle()
             {
                 if ((pixel & (0x80 >> x)) != 0)
                 {
-                    const uint16_t index = posX + x + ((posY + y) * SCREEN_WIDTH);
+                    const uint16_t index = GetVX() + x + ((GetVY() + y) * SCREEN_WIDTH);
                     // TODO: The index can access out of bounds. Should figure out why.
                     if (index >= std::size(mVram))
                         continue;
@@ -275,7 +273,11 @@ void Chip8::EmulateCycle()
             SetVX(mDelayTimer);
             break;
 
-        case 0x000A: // 0xFX0A Key press is awaited and stored in VX
+        /*
+        * 0xFX0A A key press is awaited, and then stored in VX.
+        * (Blocking Operation. All instruction halted until next key event);
+        */
+        case 0x000A:
         {
             bool keyPressed = false;
 
@@ -289,7 +291,7 @@ void Chip8::EmulateCycle()
                 }
             }
 
-            if (keyPressed)
+            if (!keyPressed)
                 mPC -= 2;
         }
         break;
@@ -304,10 +306,10 @@ void Chip8::EmulateCycle()
 
         case 0x001E: // 0xFX1E Adds VX to I
         {
-            if (mIndexReg + GetVX() > 0xFFF)
+            /*if (mIndexReg + GetVX() > 0xFFF)
                 SetVF(1);
             else
-                SetVF(0);
+                SetVF(0);*/
             mIndexReg += GetVX();
         }
         break;
@@ -396,31 +398,6 @@ void Chip8::LoadGame(const std::filesystem::path& game)
 
     f.read((char*)std::data(mMemory) + 0x200, fileSize);
     f.close();
-}
-
-uint16_t Chip8::GetOpcode() const
-{
-    return (mMemory[mPC] << 8) | mMemory[mPC + 1];
-}
-
-uint32_t Chip8::GetFrameRate() const
-{
-    return mFrameRate;
-}
-
-void Chip8::SetFrameRate(uint32_t fps)
-{
-    mFrameRate = fps;
-}
-
-uint8_t* Chip8::GetVram()
-{
-    return std::data(mVram);
-}
-
-uint8_t* Chip8::GetKeys()
-{
-    return std::data(mKeys);
 }
 
 std::array<uint32_t, Chip8::VRAM_SIZE> Chip8::GetVramImage()

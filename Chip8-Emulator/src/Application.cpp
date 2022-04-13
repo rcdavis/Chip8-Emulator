@@ -14,8 +14,8 @@ struct Vertex
     float posX = 0.0f;
     float posY = 0.0f;
 
-    float texCoordS = 0.0f;
-    float texCoordT = 0.0f;
+    float texCoordU = 0.0f;
+    float texCoordV = 0.0f;
 };
 
 Application::~Application()
@@ -55,6 +55,10 @@ bool Application::Init()
     InitIndexBuffer();
     InitTexture();
     InitShader();
+
+    glfwSetFramebufferSizeCallback(mWindow, [](GLFWwindow* window, int width, int height) {
+        glViewport(0, 0, width, height);
+    });
 
     return true;
 }
@@ -187,7 +191,7 @@ std::filesystem::path Application::ChooseGame()
         return {};
     }
 
-    // TODO: Make able to choose a game
+    // TODO: Make possible to choose a game
     return games[0].filepath;
 }
 
