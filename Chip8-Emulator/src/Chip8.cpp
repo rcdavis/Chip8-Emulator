@@ -415,7 +415,7 @@ void Chip8::SaveState(const uint32_t slot)
     std::filesystem::create_directories("Resources/SaveStates");
 
     char filepath[128] = {};
-    std::snprintf(filepath, sizeof(filepath), "Resources/SaveStates/SaveState_%i.c8st", slot);
+    snprintf(filepath, sizeof(filepath), "Resources/SaveStates/SaveState_%i.c8state", slot);
     std::ofstream file(filepath, std::ios::out | std::ios::binary);
     if (!file)
     {
@@ -447,7 +447,7 @@ void Chip8::SaveState(const uint32_t slot)
 void Chip8::LoadState(const uint32_t slot)
 {
     char filepath[128] = {};
-    std::snprintf(filepath, sizeof(filepath), "Resources/SaveStates/SaveState_%i.c8st", slot);
+    snprintf(filepath, sizeof(filepath), "Resources/SaveStates/SaveState_%i.c8state", slot);
     std::ifstream file(filepath, std::ios::in | std::ios::binary);
     if (!file)
     {

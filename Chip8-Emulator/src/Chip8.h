@@ -8,15 +8,15 @@
 class Chip8
 {
 public:
-	static constexpr uint16_t SCREEN_WIDTH = 64;
-	static constexpr uint16_t SCREEN_HEIGHT = 32;
-	static constexpr uint16_t VRAM_SIZE = SCREEN_WIDTH * SCREEN_HEIGHT;
+    static constexpr uint16_t SCREEN_WIDTH = 64;
+    static constexpr uint16_t SCREEN_HEIGHT = 32;
+    static constexpr uint16_t VRAM_SIZE = SCREEN_WIDTH * SCREEN_HEIGHT;
 
-	Chip8();
+    Chip8();
 
-	void LoadGame(const std::filesystem::path& game);
+    void LoadGame(const std::filesystem::path& game);
 
-	void EmulateCycle();
+    void EmulateCycle();
 
     void SaveState(const uint32_t slot = 0);
     void LoadState(const uint32_t slot = 0);
@@ -29,12 +29,12 @@ public:
 
     std::array<uint32_t, VRAM_SIZE> GetVramImage();
 
-	bool mRedraw;
+    bool mRedraw;
 
 private:
-	void Init();
+    void Init();
 
-	uint16_t GetOpcode() const { return (mMemory[mPC] << 8) | mMemory[mPC + 1]; }
+    uint16_t GetOpcode() const { return (mMemory[mPC] << 8) | mMemory[mPC + 1]; }
 
     uint8_t GetVX() const { return mV[(mOpcode & 0x0F00) >> 8]; }
     void SetVX(const uint8_t v) { mV[(mOpcode & 0x0F00) >> 8] = v; }
@@ -49,21 +49,21 @@ private:
     uint16_t GetAddress() const { return mOpcode & 0x0FFF; }
 
 private:
-	std::array<uint8_t, 4096> mMemory;
-	std::array<uint8_t, 16> mV;
-	std::array<uint8_t, VRAM_SIZE> mVram;
+    std::array<uint8_t, 4096> mMemory;
+    std::array<uint8_t, 16> mV;
+    std::array<uint8_t, VRAM_SIZE> mVram;
 
-	uint16_t mOpcode;
-	uint16_t mIndexReg;
-	uint16_t mPC;
+    uint16_t mOpcode;
+    uint16_t mIndexReg;
+    uint16_t mPC;
 
-	std::array<uint16_t, 16> mStack;
-	uint16_t mSP;
+    std::array<uint16_t, 16> mStack;
+    uint16_t mSP;
 
-	std::array<uint8_t, 16> mKeys;
+    std::array<uint8_t, 16> mKeys;
 
-	uint8_t mDelayTimer;
-	uint8_t mSoundTimer;
+    uint8_t mDelayTimer;
+    uint8_t mSoundTimer;
 
-	uint32_t mFrameRate;
+    uint32_t mFrameRate;
 };

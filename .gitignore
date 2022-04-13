@@ -48,4 +48,4 @@
 *.tlog
 
 # Save State Files
-*.c8st
+*.c8state
