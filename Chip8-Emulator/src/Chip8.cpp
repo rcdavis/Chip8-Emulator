@@ -1,6 +1,8 @@
 
 #include "Chip8.h"
 
+#include "Log.h"
+
 #include <algorithm>
 #include <fstream>
 #include <stdexcept>
@@ -361,10 +363,10 @@ void Chip8::EmulateCycle()
 
     if (mSoundTimer > 0)
     {
-        if (mSoundTimer == 1)
-            printf("BEEP!\n");
-
-        --mSoundTimer;
+        if (--mSoundTimer == 0)
+        {
+            LOG_INFO("BEEP!");
+        }
     }
 }
 
@@ -397,7 +399,6 @@ void Chip8::LoadGame(const std::filesystem::path& game)
     }
 
     f.read((char*)std::data(mMemory) + 0x200, fileSize);
-    f.close();
 }
 
 std::array<uint32_t, Chip8::VRAM_SIZE> Chip8::GetVramImage()
@@ -407,4 +408,70 @@ std::array<uint32_t, Chip8::VRAM_SIZE> Chip8::GetVramImage()
         image[i] = (mVram[i] == 1) ? 0xFFFFFFFF : 0;
 
     return image;
+}
+
+void Chip8::SaveState(const uint32_t slot)
+{
+    std::filesystem::create_directories("Resources/SaveStates");
+
+    char filepath[128] = {};
+    std::snprintf(filepath, sizeof(filepath), "Resources/SaveStates/SaveState_%i.c8st", slot);
+    std::ofstream file(filepath, std::ios::out | std::ios::binary);
+    if (!file)
+    {
+        LOG_ERROR("Failed to write save state for {}", filepath);
+        return;
+    }
+
+    file.write((const char*)&mOpcode, sizeof(uint16_t));
+    file.write((const char*)&mIndexReg, sizeof(uint16_t));
+    file.write((const char*)&mPC, sizeof(uint16_t));
+    file.write((const char*)&mSP, sizeof(uint16_t));
+
+    file.write((const char*)&mDelayTimer, sizeof(uint8_t));
+    file.write((const char*)&mSoundTimer, sizeof(uint8_t));
+
+    file.write((const char*)&mRedraw, sizeof(bool));
+
+    file.write((const char*)&mFrameRate, sizeof(uint32_t));
+
+    file.write((const char*)std::data(mMemory), sizeof(uint8_t) * std::size(mMemory));
+    file.write((const char*)std::data(mVram), sizeof(uint8_t) * std::size(mVram));
+    file.write((const char*)std::data(mV), sizeof(uint8_t) * std::size(mV));
+
+    file.write((const char*)std::data(mStack), sizeof(uint16_t) * std::size(mStack));
+
+    LOG_INFO("Saved State: {}", filepath);
+}
+
+void Chip8::LoadState(const uint32_t slot)
+{
+    char filepath[128] = {};
+    std::snprintf(filepath, sizeof(filepath), "Resources/SaveStates/SaveState_%i.c8st", slot);
+    std::ifstream file(filepath, std::ios::in | std::ios::binary);
+    if (!file)
+    {
+        LOG_ERROR("Failed to load save state for {}", filepath);
+        return;
+    }
+
+    file.read((char*)&mOpcode, sizeof(uint16_t));
+    file.read((char*)&mIndexReg, sizeof(uint16_t));
+    file.read((char*)&mPC, sizeof(uint16_t));
+    file.read((char*)&mSP, sizeof(uint16_t));
+
+    file.read((char*)&mDelayTimer, sizeof(uint8_t));
+    file.read((char*)&mSoundTimer, sizeof(uint8_t));
+
+    file.read((char*)&mRedraw, sizeof(bool));
+
+    file.read((char*)&mFrameRate, sizeof(uint32_t));
+
+    file.read((char*)std::data(mMemory), sizeof(uint8_t) * std::size(mMemory));
+    file.read((char*)std::data(mVram), sizeof(uint8_t) * std::size(mVram));
+    file.read((char*)std::data(mV), sizeof(uint8_t) * std::size(mV));
+
+    file.read((char*)std::data(mStack), sizeof(uint16_t) * std::size(mStack));
+
+    LOG_INFO("Loaded State: {}", filepath);
 }

@@ -21,6 +21,8 @@ public:
     void Run();
     void UpdateInput();
 
+    void KeyCallback(int key, int scancode, int action, int mods);
+
 private:
     struct GameEntry
     {

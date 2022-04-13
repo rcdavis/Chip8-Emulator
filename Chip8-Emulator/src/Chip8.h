@@ -18,6 +18,9 @@ public:
 
 	void EmulateCycle();
 
+    void SaveState(const uint32_t slot = 0);
+    void LoadState(const uint32_t slot = 0);
+
     uint32_t GetFrameRate() const { return mFrameRate; }
     void SetFrameRate(uint32_t fps) { mFrameRate = fps; }
 
