@@ -1,6 +1,7 @@
 #include "Application.h"
 
 #include "Log.h"
+#include "Utils/PlatformUtils.h"
 
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
@@ -11,6 +12,8 @@
 
 #include <fstream>
 #include <array>
+
+constexpr char* DialogFilter = "Chip8 Game (*.c8, *.ch8)\0*.c8;*.ch8\0\0";
 
 struct Vertex
 {
@@ -73,7 +76,7 @@ bool Application::Init()
         app.KeyCallback(key, scancode, action, mods);
     });
 
-    mEmuSpeed = 1;
+    mEmuSpeed = 2;
 
     return true;
 }
@@ -182,7 +185,9 @@ void Application::KeyCallback(int key, int scancode, int action, int mods)
 {
     if (action == GLFW_RELEASE)
     {
-        if (key == GLFW_KEY_F1)
+        if (key == GLFW_KEY_O && mods == GLFW_MOD_CONTROL)
+            LoadGame();
+        else if (key == GLFW_KEY_F1)
             mChip8.SaveState();
         else if (key == GLFW_KEY_F2)
             mChip8.LoadState();
@@ -383,18 +388,7 @@ void Application::ImGuiRender()
     if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
         ImGui::DockSpace(ImGui::GetID("MyDockSpace"), ImVec2(0.0f, 0.0f), dockspaceFlags);
 
-    if (ImGui::BeginMenuBar())
-    {
-        if (ImGui::BeginMenu("File"))
-        {
-            if (ImGui::MenuItem("Save State"))
-                mChip8.SaveState();
-
-            ImGui::EndMenu();
-        }
-
-        ImGui::EndMenuBar();
-    }
+    ImGuiMainMenuRender();
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0.0f, 0.0f });
     ImGui::Begin("Viewport");
@@ -432,4 +426,32 @@ void Application::DrawChip8()
 
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, nullptr);
     mFrameBuffer.Unbind();
+}
+
+void Application::ImGuiMainMenuRender()
+{
+    if (ImGui::BeginMainMenuBar())
+    {
+        if (ImGui::BeginMenu("File"))
+        {
+            if (ImGui::MenuItem("Load Game", "Ctrl+O"))
+                LoadGame();
+            ImGui::Separator();
+            if (ImGui::MenuItem("Save State"))
+                mChip8.SaveState();
+            if (ImGui::MenuItem("Load State"))
+                mChip8.LoadState();
+
+            ImGui::EndMenu();
+        }
+
+        ImGui::EndMainMenuBar();
+    }
+}
+
+void Application::LoadGame()
+{
+    auto filepath = FileDialogs::OpenFile(mWindow, DialogFilter);
+    if (filepath)
+        mChip8.LoadGame(*filepath);
 }

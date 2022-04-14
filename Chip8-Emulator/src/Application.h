@@ -45,7 +45,11 @@ private:
     void ImGuiEndFrame();
     void ImGuiRender();
 
+    void ImGuiMainMenuRender();
+
     void DrawChip8();
+
+    void LoadGame();
 
 private:
     Chip8 mChip8;
