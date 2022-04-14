@@ -25,11 +25,9 @@ public:
     void SetFrameRate(uint32_t fps) { mFrameRate = fps; }
 
     std::array<uint8_t, VRAM_SIZE> GetVram() { return mVram; }
-    uint8_t* GetKeys() { return std::data(mKeys); }
-
     std::array<uint8_t, 4096> GetMemory() const { return mMemory; }
     std::array<uint8_t, 16> GetVReg() const { return mV; }
-    std::array<uint8_t, 16> GetKeyList() const { return mKeys; }
+    std::array<uint8_t, 16>& GetKeys() { return mKeys; }
     std::array<uint16_t, 16> GetStack() const { return mStack; }
 
     std::array<uint32_t, VRAM_SIZE> GetVramImage();
@@ -56,6 +54,12 @@ public:
     uint8_t GetNN() const { return mOpcode & 0x00FF; }
     uint16_t GetAddress() const { return mOpcode & 0x0FFF; }
 
+    uint32_t GetDrawnColor() const { return mDrawnColor; }
+    void SetDrawnColor(const uint32_t color) { mDrawnColor = color; }
+
+    uint32_t GetUndrawnColor() const { return mUndrawnColor; }
+    void SetUndrawnColor(const uint32_t color) { mUndrawnColor = color; }
+
 private:
     void Init();
 
@@ -77,4 +81,8 @@ private:
     uint8_t mSoundTimer;
 
     uint32_t mFrameRate;
+
+    // Colors for monochrome screen
+    uint32_t mDrawnColor = 0xFFFFFFFF; // White
+    uint32_t mUndrawnColor = 0xFF000000; // Black
 };

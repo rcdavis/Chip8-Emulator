@@ -158,7 +158,7 @@ void Application::Run()
 
 void Application::UpdateInput()
 {
-    uint8_t* const keys = mChip8.GetKeys();
+    auto& keys = mChip8.GetKeys();
 
     keys[0x1] = (glfwGetKey(mWindow, GLFW_KEY_1) == GLFW_PRESS) ? 1 : 0;
     keys[0x2] = (glfwGetKey(mWindow, GLFW_KEY_2) == GLFW_PRESS) ? 1 : 0;
@@ -472,9 +472,19 @@ void Application::RenderChip8InfoPanel()
 
     if (ImGui::Begin("Chip8 Info", &mIsChip8InfoWindowOpen))
     {
-        ImGui::Text("Opcode: %d", mChip8.GetOpcode());
-        ImGui::Text("Index Reg: %d", mChip8.GetIndexReg());
-        ImGui::Text("Program Counter: %d", mChip8.GetProgramCounter());
+        ImVec4 drawnColor = ImGui::ColorConvertU32ToFloat4(mChip8.GetDrawnColor());
+        ImGui::ColorEdit4("Drawn", &drawnColor.x);
+        mChip8.SetDrawnColor(ImGui::ColorConvertFloat4ToU32(drawnColor));
+
+        ImVec4 undrawnColor = ImGui::ColorConvertU32ToFloat4(mChip8.GetUndrawnColor());
+        ImGui::ColorEdit4("Undrawn", &undrawnColor.x);
+        mChip8.SetUndrawnColor(ImGui::ColorConvertFloat4ToU32(undrawnColor));
+
+        ImGui::Separator();
+
+        ImGui::Text("Opcode: %X", mChip8.GetOpcode());
+        ImGui::Text("Index Reg: %X", mChip8.GetIndexReg());
+        ImGui::Text("Program Counter: %X", mChip8.GetProgramCounter());
         ImGui::Text("Stack Pointer: %d", mChip8.GetStackPointer());
         ImGui::Text("Delay Timer: %d", mChip8.GetDelayTimer());
         ImGui::Text("Sound Timer: %d", mChip8.GetSoundTimer());
