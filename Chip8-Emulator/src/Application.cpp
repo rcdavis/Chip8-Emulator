@@ -75,8 +75,6 @@ bool Application::Init()
         app.KeyCallback(key, scancode, action, mods);
     });
 
-    mEmuSpeed = 2;
-
     mMemoryEditor.Open = false;
     mVramEditor.Open = false;
 
@@ -133,7 +131,7 @@ void Application::Run()
 {
     while (!glfwWindowShouldClose(mWindow))
     {
-        for (uint32_t i = 0; i < mEmuSpeed; ++i)
+        for (uint8_t i = 0; i < mChip8.GetEmuSpeedModifier(); ++i)
         {
             UpdateInput();
             mChip8.EmulateCycle();
@@ -489,6 +487,10 @@ void Application::RenderChip8InfoPanel()
         ImVec4 undrawnColor = ImGui::ColorConvertU32ToFloat4(mChip8.GetUndrawnColor());
         ImGui::ColorEdit4("Undrawn", &undrawnColor.x);
         mChip8.SetUndrawnColor(ImGui::ColorConvertFloat4ToU32(undrawnColor));
+
+        int emuSpeed = (int)mChip8.GetEmuSpeedModifier();
+        ImGui::SliderInt("Emu Speed Modifier", &emuSpeed, 1, 10);
+        mChip8.SetEmuSpeedModifier((uint8_t)emuSpeed);
 
         ImGui::Separator();
 

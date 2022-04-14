@@ -54,6 +54,9 @@ public:
     uint8_t GetNN() const { return mOpcode & 0x00FF; }
     uint16_t GetAddress() const { return mOpcode & 0x0FFF; }
 
+    uint8_t GetEmuSpeedModifier() const { return mEmuSpeedModifier; }
+    void SetEmuSpeedModifier(const uint8_t modifier) { mEmuSpeedModifier = modifier; }
+
     uint32_t GetDrawnColor() const { return mDrawnColor; }
     void SetDrawnColor(const uint32_t color) { mDrawnColor = color; }
 
@@ -71,14 +74,15 @@ private:
     uint16_t mOpcode;
     uint16_t mIndexReg;
     uint16_t mPC;
-
-    std::array<uint16_t, 16> mStack;
     uint16_t mSP;
 
+    std::array<uint16_t, 16> mStack;
     std::array<uint8_t, 16> mKeys;
 
     uint8_t mDelayTimer;
     uint8_t mSoundTimer;
+
+    uint8_t mEmuSpeedModifier = 1;
 
     uint32_t mFrameRate;
 
