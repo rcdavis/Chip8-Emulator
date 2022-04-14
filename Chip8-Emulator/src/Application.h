@@ -54,6 +54,7 @@ private:
     uint32_t mVertexBuffer = 0;
     uint32_t mIndexBuffer = 0;
     uint32_t mTexture = 0;
+    uint32_t mEmuSpeed = 1;
     OpenGLShader mShader;
     OpenGLFramebuffer mFrameBuffer;
 

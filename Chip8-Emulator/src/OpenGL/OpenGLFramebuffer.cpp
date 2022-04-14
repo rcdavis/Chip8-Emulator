@@ -47,8 +47,7 @@ void OpenGLFramebuffer::Invalidate()
     glCreateTextures(GL_TEXTURE_2D, 1, &mColorAttachment);
     glBindTexture(GL_TEXTURE_2D, mColorAttachment);
 
-    // TODO: Fix hard coded width and height
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 64, 32, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, mWidth, mHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);

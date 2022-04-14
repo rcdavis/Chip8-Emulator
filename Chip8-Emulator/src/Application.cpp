@@ -1,7 +1,6 @@
 #include "Application.h"
 
 #include "Log.h"
-#include "TimeStep.h"
 
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
@@ -51,7 +50,6 @@ bool Application::Init()
     glfwSwapInterval(1);
 
     glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
-    glEnable(GL_DEPTH_TEST);
 
     mFrameBuffer.Create(Chip8::SCREEN_WIDTH, Chip8::SCREEN_HEIGHT);
 
@@ -74,6 +72,8 @@ bool Application::Init()
         Application& app = *(Application*)glfwGetWindowUserPointer(window);
         app.KeyCallback(key, scancode, action, mods);
     });
+
+    mEmuSpeed = 1;
 
     return true;
 }
@@ -128,19 +128,18 @@ void Application::Run()
 {
     while (!glfwWindowShouldClose(mWindow))
     {
-        const TimeStep ts = (float)glfwGetTime();
-
-        UpdateInput();
-        mChip8.EmulateCycle();
-
-        if (mChip8.mRedraw)
+        for (uint32_t i = 0; i < mEmuSpeed; ++i)
         {
-            DrawChip8();
+            UpdateInput();
+            mChip8.EmulateCycle();
 
-            mChip8.mRedraw = false;
+            if (mChip8.mRedraw)
+            {
+                DrawChip8();
+
+                mChip8.mRedraw = false;
+            }
         }
-
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         ImGuiBeginFrame();
 
@@ -416,7 +415,7 @@ void Application::ImGuiRender()
     ImGui::PopStyleVar();
 
     static bool isOpen = true;
-    ImGui::ShowDemoWindow(&isOpen);
+    ImGui::ShowMetricsWindow(&isOpen);
 
     ImGui::End();
 }
@@ -424,7 +423,6 @@ void Application::ImGuiRender()
 void Application::DrawChip8()
 {
     mFrameBuffer.Bind();
-    glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     glBindVertexArray(mVAO);
 
