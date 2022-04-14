@@ -6,7 +6,6 @@
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 
-#include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 
@@ -77,6 +76,9 @@ bool Application::Init()
     });
 
     mEmuSpeed = 2;
+
+    mMemoryEditor.Open = false;
+    mVramEditor.Open = false;
 
     return true;
 }
@@ -411,6 +413,12 @@ void Application::ImGuiRender()
     if (mIsMetricsWindowOpen)
         ImGui::ShowMetricsWindow(&mIsMetricsWindowOpen);
 
+    if (mMemoryEditor.Open)
+        mMemoryEditor.DrawWindow("Memory", std::data(mChip8.GetMemory()), std::size(mChip8.GetMemory()));
+
+    if (mVramEditor.Open)
+        mVramEditor.DrawWindow("VRAM", std::data(mChip8.GetVram()), std::size(mChip8.GetVram()));
+
     RenderChip8InfoPanel();
 
     ImGui::End();
@@ -451,6 +459,8 @@ void Application::ImGuiMainMenuRender()
         {
             ImGui::MenuItem("ImGui Metrics", nullptr, &mIsMetricsWindowOpen);
             ImGui::MenuItem("Chip8 Info", nullptr, &mIsChip8InfoWindowOpen);
+            ImGui::MenuItem("Memory", nullptr, &mMemoryEditor.Open);
+            ImGui::MenuItem("VRAM", nullptr, &mVramEditor.Open);
             ImGui::EndMenu();
         }
 

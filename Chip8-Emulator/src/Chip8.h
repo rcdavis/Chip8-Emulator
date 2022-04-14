@@ -24,8 +24,8 @@ public:
     uint32_t GetFrameRate() const { return mFrameRate; }
     void SetFrameRate(uint32_t fps) { mFrameRate = fps; }
 
-    std::array<uint8_t, VRAM_SIZE> GetVram() { return mVram; }
-    std::array<uint8_t, 4096> GetMemory() const { return mMemory; }
+    std::array<uint8_t, VRAM_SIZE>& GetVram() { return mVram; }
+    std::array<uint8_t, 4096>& GetMemory() { return mMemory; }
     std::array<uint8_t, 16> GetVReg() const { return mV; }
     std::array<uint8_t, 16>& GetKeys() { return mKeys; }
     std::array<uint16_t, 16> GetStack() const { return mStack; }

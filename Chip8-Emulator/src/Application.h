@@ -4,6 +4,9 @@
 #include "OpenGL/OpenGLShader.h"
 #include "OpenGL/OpenGLFramebuffer.h"
 
+#include <imgui.h>
+#include <imgui_memory_editor.h>
+
 #include <vector>
 #include <string>
 #include <filesystem>
@@ -63,6 +66,9 @@ private:
     uint32_t mEmuSpeed = 1;
     OpenGLShader mShader;
     OpenGLFramebuffer mFrameBuffer;
+
+    MemoryEditor mMemoryEditor;
+    MemoryEditor mVramEditor;
 
     bool mImGuiInitialized = false;
     bool mIsMetricsWindowOpen = true;
