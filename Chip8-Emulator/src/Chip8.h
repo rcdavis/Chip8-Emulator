@@ -4,6 +4,7 @@
 
 #include <array>
 #include <filesystem>
+#include <functional>
 
 class Chip8
 {
@@ -12,10 +13,15 @@ public:
     static constexpr uint16_t SCREEN_HEIGHT = 32;
     static constexpr uint16_t VRAM_SIZE = SCREEN_WIDTH * SCREEN_HEIGHT;
 
+    using UpdateInputFunc = std::function<void(std::array<uint8_t, 16>&)>;
+    using RenderFunc = std::function<void(std::array<uint32_t, VRAM_SIZE>&)>;
+
+public:
     Chip8();
 
     void LoadGame(const std::filesystem::path& game);
 
+    void Emulate();
     void EmulateCycle();
 
     void SaveState(const uint32_t slot = 0);
@@ -24,6 +30,9 @@ public:
     uint32_t GetFrameRate() const { return mFrameRate; }
     void SetFrameRate(uint32_t fps) { mFrameRate = fps; }
 
+    void SetUpdateInputFunc(UpdateInputFunc func) { mUpdateInputFunc = func; }
+    void SetRenderFunc(RenderFunc func) { mRenderFunc = func; }
+
     std::array<uint8_t, VRAM_SIZE>& GetVram() { return mVram; }
     std::array<uint8_t, 4096>& GetMemory() { return mMemory; }
     std::array<uint8_t, 16> GetVReg() const { return mV; }
@@ -31,8 +40,6 @@ public:
     std::array<uint16_t, 16> GetStack() const { return mStack; }
 
     std::array<uint32_t, VRAM_SIZE> GetVramImage();
-
-    bool mRedraw;
 
     uint16_t GetOpcode() const { return (mMemory[mPC] << 8) | mMemory[mPC + 1]; }
     uint16_t GetIndexReg() const { return mIndexReg; }
@@ -67,6 +74,9 @@ private:
     void Init();
 
 private:
+    UpdateInputFunc mUpdateInputFunc;
+    RenderFunc mRenderFunc;
+
     std::array<uint8_t, 4096> mMemory;
     std::array<uint8_t, 16> mV;
     std::array<uint8_t, VRAM_SIZE> mVram;
@@ -89,4 +99,6 @@ private:
     // Colors for monochrome screen
     uint32_t mDrawnColor = 0xFFFFFFFF; // White
     uint32_t mUndrawnColor = 0xFF000000; // Black
+
+    bool mRedraw;
 };

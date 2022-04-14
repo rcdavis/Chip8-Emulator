@@ -58,6 +58,25 @@ void Chip8::Init()
     std::copy(std::cbegin(fontSet), std::cend(fontSet), std::begin(mMemory));
 }
 
+void Chip8::Emulate()
+{
+    for (uint8_t i = 0; i < GetEmuSpeedModifier(); ++i)
+    {
+        if (mUpdateInputFunc)
+            mUpdateInputFunc(mKeys);
+
+        EmulateCycle();
+
+        if (mRedraw)
+        {
+            if (mRenderFunc)
+                mRenderFunc(GetVramImage());
+
+            mRedraw = false;
+        }
+    }
+}
+
 void Chip8::EmulateCycle()
 {
     mOpcode = GetOpcode();

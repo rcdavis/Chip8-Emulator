@@ -23,7 +23,7 @@ public:
     void Shutdown();
 
     void Run();
-    void UpdateInput();
+    void UpdateInput(std::array<uint8_t, 16>& keys);
 
     void KeyCallback(int key, int scancode, int action, int mods);
 
@@ -50,7 +50,7 @@ private:
 
     void ImGuiMainMenuRender();
 
-    void DrawChip8();
+    void DrawChip8(std::array<uint32_t, Chip8::VRAM_SIZE>& vram);
 
     void LoadGame();
 

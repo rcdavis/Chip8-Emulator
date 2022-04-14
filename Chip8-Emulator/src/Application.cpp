@@ -78,6 +78,9 @@ bool Application::Init()
     mMemoryEditor.Open = false;
     mVramEditor.Open = false;
 
+    mChip8.SetUpdateInputFunc(std::bind(&Application::UpdateInput, this, std::placeholders::_1));
+    mChip8.SetRenderFunc(std::bind(&Application::DrawChip8, this, std::placeholders::_1));
+
     return true;
 }
 
@@ -131,18 +134,7 @@ void Application::Run()
 {
     while (!glfwWindowShouldClose(mWindow))
     {
-        for (uint8_t i = 0; i < mChip8.GetEmuSpeedModifier(); ++i)
-        {
-            UpdateInput();
-            mChip8.EmulateCycle();
-
-            if (mChip8.mRedraw)
-            {
-                DrawChip8();
-
-                mChip8.mRedraw = false;
-            }
-        }
+        mChip8.Emulate();
 
         ImGuiBeginFrame();
 
@@ -156,10 +148,8 @@ void Application::Run()
     }
 }
 
-void Application::UpdateInput()
+void Application::UpdateInput(std::array<uint8_t, 16>& keys)
 {
-    auto& keys = mChip8.GetKeys();
-
     keys[0x1] = (glfwGetKey(mWindow, GLFW_KEY_1) == GLFW_PRESS) ? 1 : 0;
     keys[0x2] = (glfwGetKey(mWindow, GLFW_KEY_2) == GLFW_PRESS) ? 1 : 0;
     keys[0x3] = (glfwGetKey(mWindow, GLFW_KEY_3) == GLFW_PRESS) ? 1 : 0;
@@ -422,15 +412,14 @@ void Application::ImGuiRender()
     ImGui::End();
 }
 
-void Application::DrawChip8()
+void Application::DrawChip8(std::array<uint32_t, Chip8::VRAM_SIZE>& vram)
 {
     mFrameBuffer.Bind();
     glClear(GL_COLOR_BUFFER_BIT);
     glBindVertexArray(mVAO);
 
-    const auto vramImage = mChip8.GetVramImage();
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, Chip8::SCREEN_WIDTH, Chip8::SCREEN_HEIGHT,
-        GL_RGBA, GL_UNSIGNED_BYTE, std::data(vramImage));
+        GL_RGBA, GL_UNSIGNED_BYTE, std::data(vram));
 
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, nullptr);
     mFrameBuffer.Unbind();
