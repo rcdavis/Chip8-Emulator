@@ -18,3 +18,4 @@ workspace "Chip8-Emulator"
         systemversion "latest"
 
 include "Chip8-Emulator"
+include "ImGui"
