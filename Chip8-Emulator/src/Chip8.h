@@ -24,17 +24,25 @@ public:
     uint32_t GetFrameRate() const { return mFrameRate; }
     void SetFrameRate(uint32_t fps) { mFrameRate = fps; }
 
-    uint8_t* GetVram() { return std::data(mVram); }
+    std::array<uint8_t, VRAM_SIZE> GetVram() { return mVram; }
     uint8_t* GetKeys() { return std::data(mKeys); }
+
+    std::array<uint8_t, 4096> GetMemory() const { return mMemory; }
+    std::array<uint8_t, 16> GetVReg() const { return mV; }
+    std::array<uint8_t, 16> GetKeyList() const { return mKeys; }
+    std::array<uint16_t, 16> GetStack() const { return mStack; }
 
     std::array<uint32_t, VRAM_SIZE> GetVramImage();
 
     bool mRedraw;
 
-private:
-    void Init();
-
     uint16_t GetOpcode() const { return (mMemory[mPC] << 8) | mMemory[mPC + 1]; }
+    uint16_t GetIndexReg() const { return mIndexReg; }
+    uint16_t GetProgramCounter() const { return mPC; }
+    uint16_t GetStackPointer() const { return mSP; }
+
+    uint8_t GetDelayTimer() const { return mDelayTimer; }
+    uint8_t GetSoundTimer() const { return mSoundTimer; }
 
     uint8_t GetVX() const { return mV[(mOpcode & 0x0F00) >> 8]; }
     void SetVX(const uint8_t v) { mV[(mOpcode & 0x0F00) >> 8] = v; }
@@ -47,6 +55,9 @@ private:
 
     uint8_t GetNN() const { return mOpcode & 0x00FF; }
     uint16_t GetAddress() const { return mOpcode & 0x0FFF; }
+
+private:
+    void Init();
 
 private:
     std::array<uint8_t, 4096> mMemory;

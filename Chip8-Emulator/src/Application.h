@@ -51,6 +51,8 @@ private:
 
     void LoadGame();
 
+    void RenderChip8InfoPanel();
+
 private:
     Chip8 mChip8;
     GLFWwindow* mWindow = nullptr;
@@ -62,5 +64,7 @@ private:
     OpenGLShader mShader;
     OpenGLFramebuffer mFrameBuffer;
 
-    bool imGuiInitialized = false;
+    bool mImGuiInitialized = false;
+    bool mIsMetricsWindowOpen = true;
+    bool mIsChip8InfoWindowOpen = true;
 };
