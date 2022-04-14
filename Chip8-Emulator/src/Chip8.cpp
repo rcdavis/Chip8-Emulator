@@ -405,7 +405,7 @@ std::array<uint32_t, Chip8::VRAM_SIZE> Chip8::GetVramImage()
 {
     std::array<uint32_t, VRAM_SIZE> image = {};
     for (uint32_t i = 0; i < VRAM_SIZE; ++i)
-        image[i] = (mVram[i] == 1) ? 0xFFFFFFFF : 0;
+        image[i] = (mVram[i] == 1) ? mDrawnColor : mUndrawnColor;
 
     return image;
 }

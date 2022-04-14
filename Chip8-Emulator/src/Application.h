@@ -4,6 +4,9 @@
 #include "OpenGL/OpenGLShader.h"
 #include "OpenGL/OpenGLFramebuffer.h"
 
+#include <imgui.h>
+#include <imgui_memory_editor.h>
+
 #include <vector>
 #include <string>
 #include <filesystem>
@@ -51,6 +54,8 @@ private:
 
     void LoadGame();
 
+    void RenderChip8InfoPanel();
+
 private:
     Chip8 mChip8;
     GLFWwindow* mWindow = nullptr;
@@ -58,9 +63,13 @@ private:
     uint32_t mVertexBuffer = 0;
     uint32_t mIndexBuffer = 0;
     uint32_t mTexture = 0;
-    uint32_t mEmuSpeed = 1;
     OpenGLShader mShader;
     OpenGLFramebuffer mFrameBuffer;
 
-    bool imGuiInitialized = false;
+    MemoryEditor mMemoryEditor;
+    MemoryEditor mVramEditor;
+
+    bool mImGuiInitialized = false;
+    bool mIsMetricsWindowOpen = true;
+    bool mIsChip8InfoWindowOpen = true;
 };

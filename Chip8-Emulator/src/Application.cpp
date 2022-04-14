@@ -6,7 +6,6 @@
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 
-#include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 
@@ -76,19 +75,20 @@ bool Application::Init()
         app.KeyCallback(key, scancode, action, mods);
     });
 
-    mEmuSpeed = 2;
+    mMemoryEditor.Open = false;
+    mVramEditor.Open = false;
 
     return true;
 }
 
 void Application::Shutdown()
 {
-    if (imGuiInitialized)
+    if (mImGuiInitialized)
     {
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();
         ImGui::DestroyContext();
-        imGuiInitialized = false;
+        mImGuiInitialized = false;
     }
 
     mShader.Delete();
@@ -131,7 +131,7 @@ void Application::Run()
 {
     while (!glfwWindowShouldClose(mWindow))
     {
-        for (uint32_t i = 0; i < mEmuSpeed; ++i)
+        for (uint8_t i = 0; i < mChip8.GetEmuSpeedModifier(); ++i)
         {
             UpdateInput();
             mChip8.EmulateCycle();
@@ -158,7 +158,7 @@ void Application::Run()
 
 void Application::UpdateInput()
 {
-    uint8_t* const keys = mChip8.GetKeys();
+    auto& keys = mChip8.GetKeys();
 
     keys[0x1] = (glfwGetKey(mWindow, GLFW_KEY_1) == GLFW_PRESS) ? 1 : 0;
     keys[0x2] = (glfwGetKey(mWindow, GLFW_KEY_2) == GLFW_PRESS) ? 1 : 0;
@@ -326,7 +326,7 @@ void Application::InitImGui()
     ImGui_ImplGlfw_InitForOpenGL(mWindow, true);
     ImGui_ImplOpenGL3_Init("#version 450 core");
 
-    imGuiInitialized = true;
+    mImGuiInitialized = true;
 }
 
 void Application::ImGuiBeginFrame()
@@ -341,7 +341,7 @@ void Application::ImGuiEndFrame()
     int width = 0, height = 0;
     glfwGetWindowSize(mWindow, &width, &height);
     ImGuiIO& io = ImGui::GetIO();
-    io.DisplaySize = ImVec2(width, height);
+    io.DisplaySize = ImVec2((float)width, (float)height);
 
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -408,8 +408,16 @@ void Application::ImGuiRender()
     ImGui::End();
     ImGui::PopStyleVar();
 
-    static bool isOpen = true;
-    ImGui::ShowMetricsWindow(&isOpen);
+    if (mIsMetricsWindowOpen)
+        ImGui::ShowMetricsWindow(&mIsMetricsWindowOpen);
+
+    if (mMemoryEditor.Open)
+        mMemoryEditor.DrawWindow("Memory", std::data(mChip8.GetMemory()), std::size(mChip8.GetMemory()));
+
+    if (mVramEditor.Open)
+        mVramEditor.DrawWindow("VRAM", std::data(mChip8.GetVram()), std::size(mChip8.GetVram()));
+
+    RenderChip8InfoPanel();
 
     ImGui::End();
 }
@@ -445,6 +453,15 @@ void Application::ImGuiMainMenuRender()
             ImGui::EndMenu();
         }
 
+        if (ImGui::BeginMenu("Windows"))
+        {
+            ImGui::MenuItem("ImGui Metrics", nullptr, &mIsMetricsWindowOpen);
+            ImGui::MenuItem("Chip8 Info", nullptr, &mIsChip8InfoWindowOpen);
+            ImGui::MenuItem("Memory", nullptr, &mMemoryEditor.Open);
+            ImGui::MenuItem("VRAM", nullptr, &mVramEditor.Open);
+            ImGui::EndMenu();
+        }
+
         ImGui::EndMainMenuBar();
     }
 }
@@ -454,4 +471,42 @@ void Application::LoadGame()
     auto filepath = FileDialogs::OpenFile(mWindow, DialogFilter);
     if (filepath)
         mChip8.LoadGame(*filepath);
+}
+
+void Application::RenderChip8InfoPanel()
+{
+    if (!mIsChip8InfoWindowOpen)
+        return;
+
+    if (ImGui::Begin("Chip8 Info", &mIsChip8InfoWindowOpen))
+    {
+        ImVec4 drawnColor = ImGui::ColorConvertU32ToFloat4(mChip8.GetDrawnColor());
+        ImGui::ColorEdit4("Drawn", &drawnColor.x);
+        mChip8.SetDrawnColor(ImGui::ColorConvertFloat4ToU32(drawnColor));
+
+        ImVec4 undrawnColor = ImGui::ColorConvertU32ToFloat4(mChip8.GetUndrawnColor());
+        ImGui::ColorEdit4("Undrawn", &undrawnColor.x);
+        mChip8.SetUndrawnColor(ImGui::ColorConvertFloat4ToU32(undrawnColor));
+
+        int emuSpeed = (int)mChip8.GetEmuSpeedModifier();
+        ImGui::SliderInt("Emu Speed Modifier", &emuSpeed, 1, 10);
+        mChip8.SetEmuSpeedModifier((uint8_t)emuSpeed);
+
+        ImGui::Separator();
+
+        ImGui::Text("Opcode: %X", mChip8.GetOpcode());
+        ImGui::Text("Index Reg: %X", mChip8.GetIndexReg());
+        ImGui::Text("Program Counter: %X", mChip8.GetProgramCounter());
+        ImGui::Text("Stack Pointer: %d", mChip8.GetStackPointer());
+        ImGui::Text("Delay Timer: %d", mChip8.GetDelayTimer());
+        ImGui::Text("Sound Timer: %d", mChip8.GetSoundTimer());
+
+        ImGui::Separator();
+
+        const auto vreg = mChip8.GetVReg();
+        for (size_t i = 0; i < std::size(vreg); ++i)
+            ImGui::Text("V%X: %d", i, vreg[i]);
+    }
+
+    ImGui::End();
 }
