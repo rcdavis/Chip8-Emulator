@@ -17,13 +17,15 @@ project "Chip8-Emulator"
         "src",
         "%{IncludeDir.Spdlog}",
         "%{IncludeDir.glfw}",
-        "%{IncludeDir.glad}"
+        "%{IncludeDir.glad}",
+        "%{IncludeDir.imgui}"
     }
 
     links {
         "%{Library.glfw}",
         "%{Library.glad}",
-        "opengl32.lib"
+        "opengl32.lib",
+        "ImGui"
     }
 
     defines { "GLFW_INCLUDE_NONE" }

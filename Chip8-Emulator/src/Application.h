@@ -2,6 +2,7 @@
 
 #include "Chip8.h"
 #include "OpenGL/OpenGLShader.h"
+#include "OpenGL/OpenGLFramebuffer.h"
 
 #include <vector>
 #include <string>
@@ -38,6 +39,13 @@ private:
     void InitIndexBuffer();
     void InitTexture();
     void InitShader();
+    void InitImGui();
+
+    void ImGuiBeginFrame();
+    void ImGuiEndFrame();
+    void ImGuiRender();
+
+    void DrawChip8();
 
 private:
     Chip8 mChip8;
@@ -47,4 +55,7 @@ private:
     uint32_t mIndexBuffer = 0;
     uint32_t mTexture = 0;
     OpenGLShader mShader;
+    OpenGLFramebuffer mFrameBuffer;
+
+    bool imGuiInitialized = false;
 };

@@ -6,6 +6,10 @@
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
+
 #include <fstream>
 #include <array>
 
@@ -36,7 +40,7 @@ bool Application::Init()
     if (!glfwInit())
         return false;
 
-    mWindow = glfwCreateWindow(640, 480, "Chip8 Emulator", nullptr, nullptr);
+    mWindow = glfwCreateWindow(1600, 900, "Chip8 Emulator", nullptr, nullptr);
     if (!mWindow)
         return false;
 
@@ -47,6 +51,9 @@ bool Application::Init()
     glfwSwapInterval(1);
 
     glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
+    glEnable(GL_DEPTH_TEST);
+
+    mFrameBuffer.Create(Chip8::SCREEN_WIDTH, Chip8::SCREEN_HEIGHT);
 
     glCreateVertexArrays(1, &mVAO);
     glBindVertexArray(mVAO);
@@ -55,6 +62,7 @@ bool Application::Init()
     InitIndexBuffer();
     InitTexture();
     InitShader();
+    InitImGui();
 
     glfwSetWindowUserPointer(mWindow, this);
 
@@ -72,7 +80,16 @@ bool Application::Init()
 
 void Application::Shutdown()
 {
+    if (imGuiInitialized)
+    {
+        ImGui_ImplOpenGL3_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
+        ImGui::DestroyContext();
+        imGuiInitialized = false;
+    }
+
     mShader.Delete();
+    mFrameBuffer.Destroy();
 
     if (mTexture)
     {
@@ -118,20 +135,20 @@ void Application::Run()
 
         if (mChip8.mRedraw)
         {
-            glClear(GL_COLOR_BUFFER_BIT);
-
-            glBindVertexArray(mVAO);
-
-            const auto vramImage = mChip8.GetVramImage();
-            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, Chip8::SCREEN_WIDTH, Chip8::SCREEN_HEIGHT,
-                GL_RGBA, GL_UNSIGNED_BYTE, std::data(vramImage));
-
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, nullptr);
-
-            glfwSwapBuffers(mWindow);
+            DrawChip8();
 
             mChip8.mRedraw = false;
         }
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        ImGuiBeginFrame();
+
+        ImGuiRender();
+
+        ImGuiEndFrame();
+
+        glfwSwapBuffers(mWindow);
 
         glfwPollEvents();
     }
@@ -283,4 +300,138 @@ void Application::InitShader()
     mShader.Bind();
     mShader.SetVertexAttribf("a_Position", 2, sizeof(Vertex));
     mShader.SetVertexAttribf("a_TexCoord", 2, sizeof(Vertex), sizeof(float) * 2);
+}
+
+void Application::InitImGui()
+{
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+
+    ImGui::StyleColorsDark();
+
+    ImGuiStyle& style = ImGui::GetStyle();
+    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+    {
+        style.WindowRounding = 0.0f;
+        style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+    }
+
+    ImGui_ImplGlfw_InitForOpenGL(mWindow, true);
+    ImGui_ImplOpenGL3_Init("#version 450 core");
+
+    imGuiInitialized = true;
+}
+
+void Application::ImGuiBeginFrame()
+{
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+}
+
+void Application::ImGuiEndFrame()
+{
+    int width = 0, height = 0;
+    glfwGetWindowSize(mWindow, &width, &height);
+    ImGuiIO& io = ImGui::GetIO();
+    io.DisplaySize = ImVec2(width, height);
+
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+    {
+        GLFWwindow* backupCurrentContext = glfwGetCurrentContext();
+        ImGui::UpdatePlatformWindows();
+        ImGui::RenderPlatformWindowsDefault();
+        glfwMakeContextCurrent(backupCurrentContext);
+    }
+}
+
+void Application::ImGuiRender()
+{
+    static bool dockspaceOpen = true;
+    static bool optFullscreen = true;
+    static ImGuiDockNodeFlags dockspaceFlags = ImGuiDockNodeFlags_None;
+    ImGuiWindowFlags windowFlags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+
+    if (optFullscreen)
+    {
+        ImGuiViewport* viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(viewport->Pos);
+        ImGui::SetNextWindowSize(viewport->Size);
+        ImGui::SetNextWindowViewport(viewport->ID);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+        windowFlags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+        windowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+    }
+
+    if (dockspaceFlags & ImGuiDockNodeFlags_PassthruCentralNode)
+        windowFlags |= ImGuiWindowFlags_NoBackground;
+
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+    ImGui::Begin("DockSpace Demo", &dockspaceOpen, windowFlags);
+    ImGui::PopStyleVar();
+
+    if (optFullscreen)
+        ImGui::PopStyleVar(2);
+
+    ImGuiIO& io = ImGui::GetIO();
+    if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
+        ImGui::DockSpace(ImGui::GetID("MyDockSpace"), ImVec2(0.0f, 0.0f), dockspaceFlags);
+
+    if (ImGui::BeginMenuBar())
+    {
+        if (ImGui::BeginMenu("File"))
+        {
+            if (ImGui::MenuItem("Save State"))
+                mChip8.SaveState();
+
+            ImGui::EndMenu();
+        }
+
+        ImGui::EndMenuBar();
+    }
+
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0.0f, 0.0f });
+    ImGui::Begin("Viewport");
+
+    auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
+    auto viewportMaxRegion = ImGui::GetWindowContentRegionMax();
+    auto viewportOffset = ImGui::GetWindowPos();
+    std::array<ImVec2, 2> viewportBounds = {{
+        { viewportMinRegion.x + viewportOffset.x, viewportMinRegion.y + viewportOffset.y },
+        { viewportMaxRegion.x + viewportOffset.x, viewportMaxRegion.y + viewportOffset.y }
+    }};
+    const ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
+
+    const uint32_t texId = mFrameBuffer.GetColorAttachmentRendererId();
+    ImGui::Image((ImTextureID)texId, viewportPanelSize, ImVec2{ 0.0f, 1.0f }, ImVec2{ 1.0f, 0.0f });
+
+    ImGui::End();
+    ImGui::PopStyleVar();
+
+    static bool isOpen = true;
+    ImGui::ShowDemoWindow(&isOpen);
+
+    ImGui::End();
+}
+
+void Application::DrawChip8()
+{
+    mFrameBuffer.Bind();
+    glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glBindVertexArray(mVAO);
+
+    const auto vramImage = mChip8.GetVramImage();
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, Chip8::SCREEN_WIDTH, Chip8::SCREEN_HEIGHT,
+        GL_RGBA, GL_UNSIGNED_BYTE, std::data(vramImage));
+
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, nullptr);
+    mFrameBuffer.Unbind();
 }
