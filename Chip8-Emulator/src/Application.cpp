@@ -386,10 +386,10 @@ void Application::ImGuiRender()
     auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
     auto viewportMaxRegion = ImGui::GetWindowContentRegionMax();
     auto viewportOffset = ImGui::GetWindowPos();
-    std::array<ImVec2, 2> viewportBounds = {{
+    /*std::array<ImVec2, 2> viewportBounds = {{
         { viewportMinRegion.x + viewportOffset.x, viewportMinRegion.y + viewportOffset.y },
         { viewportMaxRegion.x + viewportOffset.x, viewportMaxRegion.y + viewportOffset.y }
-    }};
+    }};*/
     const ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
 
     const uint32_t texId = mFrameBuffer.GetColorAttachmentRendererId();

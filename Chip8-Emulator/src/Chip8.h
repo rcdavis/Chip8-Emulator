@@ -77,6 +77,8 @@ private:
     UpdateInputFunc mUpdateInputFunc;
     RenderFunc mRenderFunc;
 
+    std::filesystem::path mGameFile;
+
     std::array<uint8_t, 4096> mMemory;
     std::array<uint8_t, 16> mV;
     std::array<uint8_t, VRAM_SIZE> mVram;
@@ -94,11 +96,11 @@ private:
 
     uint8_t mEmuSpeedModifier = 1;
 
+    bool mRedraw;
+
     uint32_t mFrameRate;
 
     // Colors for monochrome screen
     uint32_t mDrawnColor = 0xFFFFFFFF; // White
     uint32_t mUndrawnColor = 0xFF000000; // Black
-
-    bool mRedraw;
 };
