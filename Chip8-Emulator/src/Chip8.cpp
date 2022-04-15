@@ -398,7 +398,7 @@ void Chip8::LoadGame(const std::filesystem::path& game)
         game.extension() != std::filesystem::path(".ch8"))
     {
         const std::string error = game.generic_string() + " isn't a .c8 or .ch8 file";
-        printf("%s\n", error.c_str());
+        LOG_ERROR(error.c_str());
         throw std::invalid_argument(error);
     }
 
@@ -406,7 +406,7 @@ void Chip8::LoadGame(const std::filesystem::path& game)
     if (!f)
     {
         const std::string error = "Unable to open game: " + game.generic_string();
-        printf("%s\n", error.c_str());
+        LOG_ERROR(error.c_str());
         throw std::invalid_argument(error);
     }
 
@@ -414,7 +414,7 @@ void Chip8::LoadGame(const std::filesystem::path& game)
     if (fileSize > std::size(mMemory) - 0x200)
     {
         const std::string error = "Rom " + game.string() + " is too large to fit in memory";
-        printf("%s\n", error.c_str());
+        LOG_ERROR(error.c_str());
         throw std::invalid_argument(error);
     }
 
