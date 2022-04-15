@@ -168,7 +168,7 @@ void Chip8::EmulateCycle()
 
         case 0x0004: // 0x8XY4 Adds VY to VX. VF is set when there's a carry
         {
-            if (GetVY() > (0xFF - GetVX()))
+            if ((GetVY() + GetVX()) > 0xFF)
                 SetVF(1);
             else
                 SetVF(0);
@@ -189,7 +189,7 @@ void Chip8::EmulateCycle()
         case 0x0006: // 0x8XY6 Stores the least significant bit of VX in VF and then shifts VX to the right by 1.
         {
             SetVF(GetVX() & 0x1);
-            SetVX(GetVX() >> 1);
+            SetVX(GetVY() >> 1);
         }
         break;
 
@@ -206,7 +206,7 @@ void Chip8::EmulateCycle()
         case 0x000E: // 0x8XYE Stores the most significant bit of VX in VF and then shifts VX to the left by 1.
         {
             SetVF(GetVX() >> 7);
-            SetVX(GetVX() << 1);
+            SetVX(GetVY() << 1);
         }
         break;
         }
@@ -243,7 +243,7 @@ void Chip8::EmulateCycle()
     {
         const uint16_t height = mOpcode & 0x000F;
         constexpr uint16_t width = 8;
-        mV[0xF] = 0;
+        SetVF(0);
 
         for (uint16_t y = 0; y < height; ++y)
         {
@@ -258,7 +258,7 @@ void Chip8::EmulateCycle()
                         continue;
 
                     if (mVram[index] == 1)
-                        mV[0xF] = 1;
+                        SetVF(1);
 
                     mVram[index] ^= 1;
                 }
@@ -330,14 +330,8 @@ void Chip8::EmulateCycle()
             break;
 
         case 0x001E: // 0xFX1E Adds VX to I
-        {
-            /*if (mIndexReg + GetVX() > 0xFFF)
-                SetVF(1);
-            else
-                SetVF(0);*/
             mIndexReg += GetVX();
-        }
-        break;
+            break;
 
         case 0x0029: // 0xFX29 Sets I to the location of the sprite for the character in VX. Characters 0-F (in hexadecimal) are represented by a 4x5 font.
             mIndexReg = GetVX() * 5;
@@ -361,7 +355,7 @@ void Chip8::EmulateCycle()
 
         case 0x0055: // 0xFX55 Stores V0 to VX (including VX) in memory starting at address I
         {
-            memcpy(std::data(mMemory) + mIndexReg, std::data(mV), (mOpcode & 0x0F00) >> 8);
+            memcpy(std::data(mMemory) + mIndexReg, std::data(mV), ((mOpcode & 0x0F00) >> 8) + 1);
 
             // On the original interpreter, when the operation is done, I = I + X + 1.
             mIndexReg += ((mOpcode & 0x0F00) >> 8) + 1;
@@ -370,7 +364,7 @@ void Chip8::EmulateCycle()
 
         case 0x0065: // 0xFX65 Fills V0 to VX (including VX) with values from memory starting at address I
         {
-            memcpy(std::data(mV), std::data(mMemory) + mIndexReg, (mOpcode & 0x0F00) >> 8);
+            memcpy(std::data(mV), std::data(mMemory) + mIndexReg, ((mOpcode & 0x0F00) >> 8) + 1);
 
             // On the original interpreter, when the operation is done, I = I + X + 1.
             mIndexReg += ((mOpcode & 0x0F00) >> 8) + 1;
