@@ -2,6 +2,7 @@
 #include "Chip8.h"
 
 #include "Log.h"
+#include "Utils/StringUtils.h"
 
 #include <algorithm>
 #include <fstream>
@@ -56,6 +57,28 @@ void Chip8::Init()
     };
 
     std::copy(std::cbegin(fontSet), std::cend(fontSet), std::begin(mMemory));
+}
+
+void Chip8::Emulate()
+{
+    if (std::empty(mGameFile))
+        return;
+
+    for (uint8_t i = 0; i < GetEmuSpeedModifier(); ++i)
+    {
+        if (mUpdateInputFunc)
+            mUpdateInputFunc(mKeys);
+
+        EmulateCycle();
+
+        if (mRedraw)
+        {
+            if (mRenderFunc)
+                mRenderFunc(GetVramImage());
+
+            mRedraw = false;
+        }
+    }
 }
 
 void Chip8::EmulateCycle()
@@ -372,13 +395,11 @@ void Chip8::EmulateCycle()
 
 void Chip8::LoadGame(const std::filesystem::path& game)
 {
-    Init();
-
     if (game.extension() != std::filesystem::path(".c8") &&
         game.extension() != std::filesystem::path(".ch8"))
     {
         const std::string error = game.generic_string() + " isn't a .c8 or .ch8 file";
-        printf("%s\n", error.c_str());
+        LOG_ERROR(error.c_str());
         throw std::invalid_argument(error);
     }
 
@@ -386,7 +407,7 @@ void Chip8::LoadGame(const std::filesystem::path& game)
     if (!f)
     {
         const std::string error = "Unable to open game: " + game.generic_string();
-        printf("%s\n", error.c_str());
+        LOG_ERROR(error.c_str());
         throw std::invalid_argument(error);
     }
 
@@ -394,11 +415,15 @@ void Chip8::LoadGame(const std::filesystem::path& game)
     if (fileSize > std::size(mMemory) - 0x200)
     {
         const std::string error = "Rom " + game.string() + " is too large to fit in memory";
-        printf("%s\n", error.c_str());
+        LOG_ERROR(error.c_str());
         throw std::invalid_argument(error);
     }
 
+    Init();
+
     f.read((char*)std::data(mMemory) + 0x200, fileSize);
+
+    mGameFile = game;
 }
 
 std::array<uint32_t, Chip8::VRAM_SIZE> Chip8::GetVramImage()
@@ -414,8 +439,11 @@ void Chip8::SaveState(const uint32_t slot)
 {
     std::filesystem::create_directories("Resources/SaveStates");
 
-    char filepath[128] = {};
-    snprintf(filepath, sizeof(filepath), "Resources/SaveStates/SaveState_%i.c8state", slot);
+    if (std::empty(mGameFile))
+        return;
+
+    const std::string filepath = StringUtils::Format("Resources/SaveStates/%s_%i.c8state",
+        mGameFile.stem().string().c_str(), slot);
     std::ofstream file(filepath, std::ios::out | std::ios::binary);
     if (!file)
     {
@@ -433,8 +461,6 @@ void Chip8::SaveState(const uint32_t slot)
 
     file.write((const char*)&mRedraw, sizeof(bool));
 
-    file.write((const char*)&mFrameRate, sizeof(uint32_t));
-
     file.write((const char*)std::data(mMemory), sizeof(uint8_t) * std::size(mMemory));
     file.write((const char*)std::data(mVram), sizeof(uint8_t) * std::size(mVram));
     file.write((const char*)std::data(mV), sizeof(uint8_t) * std::size(mV));
@@ -446,8 +472,11 @@ void Chip8::SaveState(const uint32_t slot)
 
 void Chip8::LoadState(const uint32_t slot)
 {
-    char filepath[128] = {};
-    snprintf(filepath, sizeof(filepath), "Resources/SaveStates/SaveState_%i.c8state", slot);
+    if (std::empty(mGameFile))
+        return;
+
+    const std::string filepath = StringUtils::Format("Resources/SaveStates/%s_%i.c8state",
+        mGameFile.stem().string().c_str(), slot);
     std::ifstream file(filepath, std::ios::in | std::ios::binary);
     if (!file)
     {
@@ -464,8 +493,6 @@ void Chip8::LoadState(const uint32_t slot)
     file.read((char*)&mSoundTimer, sizeof(uint8_t));
 
     file.read((char*)&mRedraw, sizeof(bool));
-
-    file.read((char*)&mFrameRate, sizeof(uint32_t));
 
     file.read((char*)std::data(mMemory), sizeof(uint8_t) * std::size(mMemory));
     file.read((char*)std::data(mVram), sizeof(uint8_t) * std::size(mVram));

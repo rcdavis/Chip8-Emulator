@@ -4,6 +4,7 @@
 
 #include <array>
 #include <filesystem>
+#include <functional>
 
 class Chip8
 {
@@ -12,11 +13,15 @@ public:
     static constexpr uint16_t SCREEN_HEIGHT = 32;
     static constexpr uint16_t VRAM_SIZE = SCREEN_WIDTH * SCREEN_HEIGHT;
 
+    using UpdateInputFunc = std::function<void(std::array<uint8_t, 16>&)>;
+    using RenderFunc = std::function<void(std::array<uint32_t, VRAM_SIZE>&)>;
+
+public:
     Chip8();
 
     void LoadGame(const std::filesystem::path& game);
 
-    void EmulateCycle();
+    void Emulate();
 
     void SaveState(const uint32_t slot = 0);
     void LoadState(const uint32_t slot = 0);
@@ -24,6 +29,10 @@ public:
     uint32_t GetFrameRate() const { return mFrameRate; }
     void SetFrameRate(uint32_t fps) { mFrameRate = fps; }
 
+    void SetUpdateInputFunc(UpdateInputFunc func) { mUpdateInputFunc = func; }
+    void SetRenderFunc(RenderFunc func) { mRenderFunc = func; }
+
+    const std::filesystem::path& GetGameFile() const { return mGameFile; }
     std::array<uint8_t, VRAM_SIZE>& GetVram() { return mVram; }
     std::array<uint8_t, 4096>& GetMemory() { return mMemory; }
     std::array<uint8_t, 16> GetVReg() const { return mV; }
@@ -31,8 +40,6 @@ public:
     std::array<uint16_t, 16> GetStack() const { return mStack; }
 
     std::array<uint32_t, VRAM_SIZE> GetVramImage();
-
-    bool mRedraw;
 
     uint16_t GetOpcode() const { return (mMemory[mPC] << 8) | mMemory[mPC + 1]; }
     uint16_t GetIndexReg() const { return mIndexReg; }
@@ -66,7 +73,14 @@ public:
 private:
     void Init();
 
+    void EmulateCycle();
+
 private:
+    UpdateInputFunc mUpdateInputFunc;
+    RenderFunc mRenderFunc;
+
+    std::filesystem::path mGameFile;
+
     std::array<uint8_t, 4096> mMemory;
     std::array<uint8_t, 16> mV;
     std::array<uint8_t, VRAM_SIZE> mVram;
@@ -83,6 +97,8 @@ private:
     uint8_t mSoundTimer;
 
     uint8_t mEmuSpeedModifier = 1;
+
+    bool mRedraw;
 
     uint32_t mFrameRate;
 
