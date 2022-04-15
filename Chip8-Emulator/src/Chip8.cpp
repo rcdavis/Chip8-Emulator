@@ -61,6 +61,9 @@ void Chip8::Init()
 
 void Chip8::Emulate()
 {
+    if (std::empty(mGameFile))
+        return;
+
     for (uint8_t i = 0; i < GetEmuSpeedModifier(); ++i)
     {
         if (mUpdateInputFunc)
@@ -392,8 +395,6 @@ void Chip8::EmulateCycle()
 
 void Chip8::LoadGame(const std::filesystem::path& game)
 {
-    Init();
-
     if (game.extension() != std::filesystem::path(".c8") &&
         game.extension() != std::filesystem::path(".ch8"))
     {
@@ -418,6 +419,8 @@ void Chip8::LoadGame(const std::filesystem::path& game)
         throw std::invalid_argument(error);
     }
 
+    Init();
+
     f.read((char*)std::data(mMemory) + 0x200, fileSize);
 
     mGameFile = game;
@@ -435,6 +438,9 @@ std::array<uint32_t, Chip8::VRAM_SIZE> Chip8::GetVramImage()
 void Chip8::SaveState(const uint32_t slot)
 {
     std::filesystem::create_directories("Resources/SaveStates");
+
+    if (std::empty(mGameFile))
+        return;
 
     const std::string filepath = StringUtils::Format("Resources/SaveStates/%s_%i.c8state",
         mGameFile.stem().string().c_str(), slot);
@@ -466,6 +472,9 @@ void Chip8::SaveState(const uint32_t slot)
 
 void Chip8::LoadState(const uint32_t slot)
 {
+    if (std::empty(mGameFile))
+        return;
+
     const std::string filepath = StringUtils::Format("Resources/SaveStates/%s_%i.c8state",
         mGameFile.stem().string().c_str(), slot);
     std::ifstream file(filepath, std::ios::in | std::ios::binary);

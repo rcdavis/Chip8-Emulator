@@ -30,12 +30,6 @@ Application::~Application()
 
 bool Application::Init()
 {
-    const std::filesystem::path game = ChooseGame();
-    if (std::empty(game))
-        return false;
-
-    mChip8.LoadGame(game);
-
     glfwSetErrorCallback(ErrorCallback);
 
     if (!glfwInit())
@@ -51,7 +45,7 @@ bool Application::Init()
 
     glfwSwapInterval(1);
 
-    glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
     mFrameBuffer.Create(Chip8::SCREEN_WIDTH, Chip8::SCREEN_HEIGHT);
 
@@ -80,6 +74,10 @@ bool Application::Init()
 
     mChip8.SetUpdateInputFunc(std::bind(&Application::UpdateInput, this, std::placeholders::_1));
     mChip8.SetRenderFunc(std::bind(&Application::DrawChip8, this, std::placeholders::_1));
+
+    mFrameBuffer.Bind();
+    glClear(GL_COLOR_BUFFER_BIT);
+    mFrameBuffer.Unbind();
 
     return true;
 }
@@ -182,46 +180,6 @@ void Application::KeyCallback(int key, int scancode, int action, int mods)
         else if (key == GLFW_KEY_F2)
             mChip8.LoadState();
     }
-}
-
-std::vector<Application::GameEntry> Application::GetGameList()
-{
-    constexpr char* gameListFile = "Resources/Games/GameList.glist";
-    std::ifstream file(gameListFile);
-    if (!file)
-    {
-        LOG_ERROR("Failed to open game list: {}", gameListFile);
-        return {};
-    }
-
-    std::vector<GameEntry> games;
-    std::string line;
-    while (std::getline(file, line))
-    {
-        const auto index = line.find_first_of('=');
-        if (index == std::string::npos)
-            continue;
-
-        GameEntry entry;
-        entry.name = line.substr(0, index);
-        entry.filepath = line.substr(index + 1);
-        games.push_back(entry);
-    }
-
-    return games;
-}
-
-std::filesystem::path Application::ChooseGame()
-{
-    const auto games = GetGameList();
-    if (std::empty(games))
-    {
-        LOG_ERROR("Empty game list");
-        return {};
-    }
-
-    // TODO: Make possible to choose a game
-    return games[0].filepath;
 }
 
 void Application::ErrorCallback(int error, const char* description)
@@ -386,10 +344,6 @@ void Application::ImGuiRender()
     auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
     auto viewportMaxRegion = ImGui::GetWindowContentRegionMax();
     auto viewportOffset = ImGui::GetWindowPos();
-    /*std::array<ImVec2, 2> viewportBounds = {{
-        { viewportMinRegion.x + viewportOffset.x, viewportMinRegion.y + viewportOffset.y },
-        { viewportMaxRegion.x + viewportOffset.x, viewportMaxRegion.y + viewportOffset.y }
-    }};*/
     const ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
 
     const uint32_t texId = mFrameBuffer.GetColorAttachmentRendererId();
@@ -434,9 +388,9 @@ void Application::ImGuiMainMenuRender()
             if (ImGui::MenuItem("Load Game", "Ctrl+O"))
                 LoadGame();
             ImGui::Separator();
-            if (ImGui::MenuItem("Save State"))
+            if (ImGui::MenuItem("Save State", nullptr, nullptr, !std::empty(mChip8.GetGameFile())))
                 mChip8.SaveState();
-            if (ImGui::MenuItem("Load State"))
+            if (ImGui::MenuItem("Load State", nullptr, nullptr, !std::empty(mChip8.GetGameFile())))
                 mChip8.LoadState();
 
             ImGui::EndMenu();
@@ -495,6 +449,12 @@ void Application::RenderChip8InfoPanel()
         const auto vreg = mChip8.GetVReg();
         for (size_t i = 0; i < std::size(vreg); ++i)
             ImGui::Text("V%X: %d", i, vreg[i]);
+
+        ImGui::Separator();
+
+        const auto& keys = mChip8.GetKeys();
+        for (size_t i = 0; i < std::size(keys); ++i)
+            ImGui::Text("Key[%X] = %d", i, keys[i]);
     }
 
     ImGui::End();

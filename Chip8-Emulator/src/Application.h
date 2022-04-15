@@ -28,14 +28,6 @@ public:
     void KeyCallback(int key, int scancode, int action, int mods);
 
 private:
-    struct GameEntry
-    {
-        std::string name;
-        std::filesystem::path filepath;
-    };
-
-    std::vector<GameEntry> GetGameList();
-    std::filesystem::path ChooseGame();
     static void ErrorCallback(int error, const char* description);
 
     void InitVertexBuffer();

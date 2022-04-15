@@ -22,7 +22,6 @@ public:
     void LoadGame(const std::filesystem::path& game);
 
     void Emulate();
-    void EmulateCycle();
 
     void SaveState(const uint32_t slot = 0);
     void LoadState(const uint32_t slot = 0);
@@ -33,6 +32,7 @@ public:
     void SetUpdateInputFunc(UpdateInputFunc func) { mUpdateInputFunc = func; }
     void SetRenderFunc(RenderFunc func) { mRenderFunc = func; }
 
+    const std::filesystem::path& GetGameFile() const { return mGameFile; }
     std::array<uint8_t, VRAM_SIZE>& GetVram() { return mVram; }
     std::array<uint8_t, 4096>& GetMemory() { return mMemory; }
     std::array<uint8_t, 16> GetVReg() const { return mV; }
@@ -72,6 +72,8 @@ public:
 
 private:
     void Init();
+
+    void EmulateCycle();
 
 private:
     UpdateInputFunc mUpdateInputFunc;
