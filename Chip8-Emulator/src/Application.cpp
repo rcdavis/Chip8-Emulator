@@ -79,11 +79,15 @@ bool Application::Init()
     glClear(GL_COLOR_BUFFER_BIT);
     mFrameBuffer.Unbind();
 
+    LoadEmulatorSettings();
+
     return true;
 }
 
 void Application::Shutdown()
 {
+    SaveEmulatorSettings();
+
     if (mImGuiInitialized)
     {
         ImGui_ImplOpenGL3_Shutdown();
@@ -458,4 +462,57 @@ void Application::RenderChip8InfoPanel()
     }
 
     ImGui::End();
+}
+
+void Application::LoadEmulatorSettings()
+{
+    std::ifstream file("emulator.ini");
+    if (!file)
+    {
+        LOG_ERROR("Failed to load emulator settings");
+        return;
+    }
+
+    std::string line;
+    while (std::getline(file, line))
+    {
+        const auto index = line.find_first_of('=');
+        if (index == std::string::npos)
+            continue;
+
+        const auto key = line.substr(0, index);
+        const auto value = line.substr(index + 1);
+        if (key == "metricsWindowOpen")
+            mIsMetricsWindowOpen = (bool)std::stoi(value);
+        else if (key == "chip8InfoWindowOpen")
+            mIsChip8InfoWindowOpen = (bool)std::stoi(value);
+        else if (key == "memoryWindowOpen")
+            mMemoryEditor.Open = (bool)std::stoi(value);
+        else if (key == "vramWindowOpen")
+            mVramEditor.Open = (bool)std::stoi(value);
+        else if (key == "emuSpeedModifier")
+            mChip8.SetEmuSpeedModifier((uint8_t)std::stoi(value));
+        else if (key == "drawnColor")
+            mChip8.SetDrawnColor((uint32_t)std::stoul(value));
+        else if (key == "undrawnColor")
+            mChip8.SetUndrawnColor((uint32_t)std::stoul(value));
+    }
+}
+
+void Application::SaveEmulatorSettings()
+{
+    std::ofstream file("emulator.ini");
+    if (!file)
+    {
+        LOG_ERROR("Failed to save emulator settings");
+        return;
+    }
+
+    file << "metricsWindowOpen=" << mIsMetricsWindowOpen << '\n';
+    file << "chip8InfoWindowOpen=" << mIsChip8InfoWindowOpen << '\n';
+    file << "memoryWindowOpen=" << mMemoryEditor.Open << '\n';
+    file << "vramWindowOpen=" << mVramEditor.Open << '\n';
+    file << "emuSpeedModifier=" << (uint32_t)mChip8.GetEmuSpeedModifier() << '\n';
+    file << "drawnColor=" << mChip8.GetDrawnColor() << '\n';
+    file << "undrawnColor=" << mChip8.GetUndrawnColor() << '\n';
 }

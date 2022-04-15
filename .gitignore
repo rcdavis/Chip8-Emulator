@@ -49,3 +49,5 @@
 
 # Save State Files
 *.c8state
+
+Chip8-Emulator/emulator.ini
