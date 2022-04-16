@@ -9,6 +9,7 @@
 class Chip8
 {
 public:
+    // TODO: Super Chip is 128x64
     static constexpr uint16_t SCREEN_WIDTH = 64;
     static constexpr uint16_t SCREEN_HEIGHT = 32;
     static constexpr uint16_t VRAM_SIZE = SCREEN_WIDTH * SCREEN_HEIGHT;

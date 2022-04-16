@@ -56,7 +56,7 @@ void Chip8::Init()
         0xF0, 0x80, 0xF0, 0x80, 0x80  //F
     };
 
-    std::copy(std::cbegin(fontSet), std::cend(fontSet), std::begin(mMemory));
+    memcpy(std::data(mMemory), std::data(fontSet), std::size(fontSet));
 }
 
 void Chip8::Emulate()
@@ -64,7 +64,9 @@ void Chip8::Emulate()
     if (std::empty(mGameFile))
         return;
 
-    for (uint8_t i = 0; i < GetEmuSpeedModifier(); ++i)
+    // Loop 9 times since the Chip8 runs at around ~500-600Hz
+    // and the app runs at ~60Hz
+    for (uint8_t i = 0; i < 9 * GetEmuSpeedModifier(); ++i)
     {
         if (mUpdateInputFunc)
             mUpdateInputFunc(mKeys);
@@ -178,35 +180,37 @@ void Chip8::EmulateCycle()
 
         case 0x0005: // 0x8XY5 VY is subtracted from VX. VF is set to 0 if borrow
         {
-            if (GetVY() > GetVX())
-                SetVF(0);
-            else
+            if (GetVX() > GetVY())
                 SetVF(1);
+            else
+                SetVF(0);
             SetVX(GetVX() - GetVY());
         }
         break;
 
         case 0x0006: // 0x8XY6 Stores the least significant bit of VX in VF and then shifts VX to the right by 1.
         {
+            // TODO: If original COSMAC VIP, Set VX to VY before rest of op
             SetVF(GetVX() & 0x1);
-            SetVX(GetVY() >> 1);
+            SetVX(GetVX() >> 1);
         }
         break;
 
         case 0x0007: // 0x8XY7 Sets VX to VY minus VX. VF is set to 0 when there's a borrow, and 1 when there isn't.
         {
-            if (GetVX() > GetVY())
-                SetVF(0);
-            else
+            if (GetVY() > GetVX())
                 SetVF(1);
+            else
+                SetVF(0);
             SetVX(GetVY() - GetVX());
         }
         break;
 
         case 0x000E: // 0x8XYE Stores the most significant bit of VX in VF and then shifts VX to the left by 1.
         {
+            // TODO: If original COSMAC VIP, Set VX to VY before rest of op
             SetVF(GetVX() >> 7);
-            SetVX(GetVY() << 1);
+            SetVX(GetVX() << 1);
         }
         break;
         }
@@ -226,6 +230,7 @@ void Chip8::EmulateCycle()
 
     case 0xB000: // 0xBNNN Jumps to the address NNN plus V0
         mPC = GetAddress() + mV[0];
+        // TODO: Super Chip changed to NNN plus VX
         break;
 
     case 0xC000: // 0xCXNN Sets VX to the result of bitwise and op on a random number and NN
@@ -241,18 +246,20 @@ void Chip8::EmulateCycle()
      */
     case 0xD000:
     {
-        const uint16_t height = mOpcode & 0x000F;
-        constexpr uint16_t width = 8;
+        const uint16_t xPos = GetVX();
+        const uint16_t yPos = GetVY();
+        const uint16_t numRows = mOpcode & 0x000F;
+        constexpr uint16_t numCols = 8;
         SetVF(0);
 
-        for (uint16_t y = 0; y < height; ++y)
+        for (uint16_t row = 0; row < numRows; ++row)
         {
-            const uint16_t pixel = mMemory[mIndexReg + y];
-            for (uint16_t x = 0; x < width; ++x)
+            const uint8_t pixel = mMemory[mIndexReg + row];
+            for (uint16_t col = 0; col < numCols; ++col)
             {
-                if ((pixel & (0x80 >> x)) != 0)
+                if (pixel & (0x80 >> col))
                 {
-                    const uint16_t index = GetVX() + x + ((GetVY() + y) * SCREEN_WIDTH);
+                    const uint16_t index = (xPos + col) + ((yPos + row) * SCREEN_WIDTH);
                     // TODO: The index can access out of bounds. Should figure out why.
                     if (index >= std::size(mVram))
                         continue;
@@ -358,6 +365,7 @@ void Chip8::EmulateCycle()
             memcpy(std::data(mMemory) + mIndexReg, std::data(mV), ((mOpcode & 0x0F00) >> 8) + 1);
 
             // On the original interpreter, when the operation is done, I = I + X + 1.
+            // TODO: Newer implementations do not increment the I
             mIndexReg += ((mOpcode & 0x0F00) >> 8) + 1;
         }
         break;
@@ -367,6 +375,7 @@ void Chip8::EmulateCycle()
             memcpy(std::data(mV), std::data(mMemory) + mIndexReg, ((mOpcode & 0x0F00) >> 8) + 1);
 
             // On the original interpreter, when the operation is done, I = I + X + 1.
+            // TODO: Newer implementations do not increment the I
             mIndexReg += ((mOpcode & 0x0F00) >> 8) + 1;
         }
         break;
