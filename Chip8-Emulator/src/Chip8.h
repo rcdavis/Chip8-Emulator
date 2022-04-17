@@ -3,19 +3,21 @@
 #include "Types.h"
 
 #include <array>
+#include <vector>
 #include <filesystem>
 #include <functional>
 
 class Chip8
 {
 public:
-    // TODO: Super Chip is 128x64
-    static constexpr uint16_t SCREEN_WIDTH = 64;
-    static constexpr uint16_t SCREEN_HEIGHT = 32;
-    static constexpr uint16_t VRAM_SIZE = SCREEN_WIDTH * SCREEN_HEIGHT;
-
     using UpdateInputFunc = std::function<void(std::array<uint8_t, 16>&)>;
-    using RenderFunc = std::function<void(std::array<uint32_t, VRAM_SIZE>&)>;
+    using RenderFunc = std::function<void(const std::vector<uint32_t>&)>;
+
+    enum class GraphicsMode
+    {
+        e64x32,
+        e128x64
+    };
 
 public:
     Chip8();
@@ -33,14 +35,21 @@ public:
     void SetUpdateInputFunc(UpdateInputFunc func) { mUpdateInputFunc = func; }
     void SetRenderFunc(RenderFunc func) { mRenderFunc = func; }
 
+    uint16_t GetScreenWidth() const;
+    uint16_t GetScreenHeight() const;
+
+    GraphicsMode GetGraphicsMode() const { return mGraphicsMode; }
+    void SetGraphicsMode(const GraphicsMode mode) { mGraphicsMode = mode; }
+    void ChangeGraphicsMode(const GraphicsMode mode);
+
     const std::filesystem::path& GetGameFile() const { return mGameFile; }
-    std::array<uint8_t, VRAM_SIZE>& GetVram() { return mVram; }
+    std::vector<uint8_t>& GetVram() { return mVram; }
     std::array<uint8_t, 4096>& GetMemory() { return mMemory; }
     std::array<uint8_t, 16> GetVReg() const { return mV; }
     std::array<uint8_t, 16>& GetKeys() { return mKeys; }
     std::array<uint16_t, 16> GetStack() const { return mStack; }
 
-    std::array<uint32_t, VRAM_SIZE> GetVramImage();
+    std::vector<uint32_t> GetVramImage();
 
     uint16_t GetOpcode() const { return (mMemory[mPC] << 8) | mMemory[mPC + 1]; }
     uint16_t GetIndexReg() const { return mIndexReg; }
@@ -84,7 +93,7 @@ private:
 
     std::array<uint8_t, 4096> mMemory;
     std::array<uint8_t, 16> mV;
-    std::array<uint8_t, VRAM_SIZE> mVram;
+    std::vector<uint8_t> mVram;
 
     uint16_t mOpcode;
     uint16_t mIndexReg;
@@ -106,4 +115,6 @@ private:
     // Colors for monochrome screen
     uint32_t mDrawnColor = 0xFFFFFFFF; // White
     uint32_t mUndrawnColor = 0xFF000000; // Black
+
+    GraphicsMode mGraphicsMode = GraphicsMode::e64x32;
 };

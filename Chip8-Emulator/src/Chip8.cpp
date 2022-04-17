@@ -19,9 +19,20 @@ void Chip8::Init()
 {
     mMemory.fill(0);
     mV.fill(0);
-    mVram.fill(0);
     mStack.fill(0);
     mKeys.fill(0);
+
+    switch (mGraphicsMode)
+    {
+    case Chip8::GraphicsMode::e64x32:
+        mVram.resize(64 * 32);
+        break;
+
+    case Chip8::GraphicsMode::e128x64:
+        mVram.resize(128 * 64);
+        break;
+    }
+    memset(std::data(mVram), 0, std::size(mVram));
 
     mOpcode = 0;
 
@@ -92,16 +103,16 @@ void Chip8::EmulateCycle()
     {
     case 0x0000:
     {
-        switch (mOpcode & 0x000F)
+        switch (mOpcode)
         {
-        case 0x0000: // 0x00E0: Clears the screen
+        case 0x00E0: // 0x00E0: Clears the screen
         {
-            mVram.fill(0);
+            memset(std::data(mVram), 0, std::size(mVram));
             mRedraw = true;
         }
         break;
 
-        case 0x000E: // 0x00EE: Returns from subroutine
+        case 0x00EE: // 0x00EE: Returns from subroutine
             mPC = mStack[--mSP];
             break;
         }
@@ -259,7 +270,7 @@ void Chip8::EmulateCycle()
             {
                 if (pixel & (0x80 >> col))
                 {
-                    const uint16_t index = (xPos + col) + ((yPos + row) * SCREEN_WIDTH);
+                    const uint16_t index = (xPos + col) + ((yPos + row) * GetScreenWidth());
                     // TODO: The index can access out of bounds. Should figure out why.
                     if (index >= std::size(mVram))
                         continue;
@@ -429,10 +440,10 @@ void Chip8::LoadGame(const std::filesystem::path& game)
     mGameFile = game;
 }
 
-std::array<uint32_t, Chip8::VRAM_SIZE> Chip8::GetVramImage()
+std::vector<uint32_t> Chip8::GetVramImage()
 {
-    std::array<uint32_t, VRAM_SIZE> image = {};
-    for (uint32_t i = 0; i < VRAM_SIZE; ++i)
+    std::vector<uint32_t> image(GetScreenWidth() * GetScreenHeight());
+    for (uint32_t i = 0; i < std::size(mVram); ++i)
         image[i] = (mVram[i] == 1) ? mDrawnColor : mUndrawnColor;
 
     return image;
@@ -463,6 +474,8 @@ void Chip8::SaveState(const uint32_t slot)
     file.write((const char*)&mSoundTimer, sizeof(uint8_t));
 
     file.write((const char*)&mRedraw, sizeof(bool));
+
+    file.write((const char*)&mGraphicsMode, sizeof(uint8_t));
 
     file.write((const char*)std::data(mMemory), sizeof(uint8_t) * std::size(mMemory));
     file.write((const char*)std::data(mVram), sizeof(uint8_t) * std::size(mVram));
@@ -497,6 +510,10 @@ void Chip8::LoadState(const uint32_t slot)
 
     file.read((char*)&mRedraw, sizeof(bool));
 
+    file.read((char*)&mGraphicsMode, sizeof(uint8_t));
+
+    mVram.resize(GetScreenWidth() * GetScreenHeight());
+
     file.read((char*)std::data(mMemory), sizeof(uint8_t) * std::size(mMemory));
     file.read((char*)std::data(mVram), sizeof(uint8_t) * std::size(mVram));
     file.read((char*)std::data(mV), sizeof(uint8_t) * std::size(mV));
@@ -504,4 +521,56 @@ void Chip8::LoadState(const uint32_t slot)
     file.read((char*)std::data(mStack), sizeof(uint16_t) * std::size(mStack));
 
     LOG_INFO("Loaded State: {}", filepath);
+}
+
+uint16_t Chip8::GetScreenWidth() const
+{
+    switch (mGraphicsMode)
+    {
+    case GraphicsMode::e64x32:
+        return 64;
+
+    case GraphicsMode::e128x64:
+        return 128;
+    }
+
+    return 64;
+}
+
+uint16_t Chip8::GetScreenHeight() const
+{
+    switch (mGraphicsMode)
+    {
+    case GraphicsMode::e64x32:
+        return 32;
+
+    case GraphicsMode::e128x64:
+        return 64;
+    }
+
+    return 32;
+}
+
+void Chip8::ChangeGraphicsMode(const GraphicsMode mode)
+{
+    switch (mGraphicsMode)
+    {
+    case GraphicsMode::e64x32:
+    {
+        if (mode == GraphicsMode::e64x32)
+            return;
+
+        mVram.resize(64 * 32);
+    }
+    break;
+
+    case GraphicsMode::e128x64:
+    {
+        if (mode == GraphicsMode::e128x64)
+            return;
+
+        mVram.resize(128 * 64);
+    }
+    break;
+    }
 }

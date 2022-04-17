@@ -47,7 +47,7 @@ bool Application::Init()
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-    mFrameBuffer.Create(Chip8::SCREEN_WIDTH, Chip8::SCREEN_HEIGHT);
+    mFrameBuffer.Create(mChip8.GetScreenWidth(), mChip8.GetScreenHeight());
 
     glCreateVertexArrays(1, &mVAO);
     glBindVertexArray(mVAO);
@@ -225,7 +225,7 @@ void Application::InitTexture()
     glActiveTexture(GL_TEXTURE0);
     glGenTextures(1, &mTexture);
     glBindTexture(GL_TEXTURE_2D, mTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, Chip8::SCREEN_WIDTH, Chip8::SCREEN_HEIGHT,
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, mChip8.GetScreenWidth(), mChip8.GetScreenHeight(),
         0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
     glTextureParameteri(mTexture, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTextureParameteri(mTexture, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -370,13 +370,13 @@ void Application::ImGuiRender()
     ImGui::End();
 }
 
-void Application::DrawChip8(std::array<uint32_t, Chip8::VRAM_SIZE>& vram)
+void Application::DrawChip8(const std::vector<uint32_t>& vram)
 {
     mFrameBuffer.Bind();
     glClear(GL_COLOR_BUFFER_BIT);
     glBindVertexArray(mVAO);
 
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, Chip8::SCREEN_WIDTH, Chip8::SCREEN_HEIGHT,
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, mChip8.GetScreenWidth(), mChip8.GetScreenHeight(),
         GL_RGBA, GL_UNSIGNED_BYTE, std::data(vram));
 
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, nullptr);

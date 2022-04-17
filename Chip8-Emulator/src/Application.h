@@ -42,7 +42,7 @@ private:
     void ImGuiMainMenuRender();
 
     void UpdateInput(std::array<uint8_t, 16>& keys);
-    void DrawChip8(std::array<uint32_t, Chip8::VRAM_SIZE>& vram);
+    void DrawChip8(const std::vector<uint32_t>& vram);
 
     void LoadGame();
 
