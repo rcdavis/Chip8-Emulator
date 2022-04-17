@@ -115,6 +115,32 @@ void Chip8::EmulateCycle()
         case 0x00EE: // 0x00EE: Returns from subroutine
             mPC = mStack[--mSP];
             break;
+
+        case 0x00FF: // 0x00FF: Enable 128x64 hi res graphics mode
+            ChangeGraphicsMode(GraphicsMode::e128x64);
+            break;
+
+        case 0x00FE: // 0x00FE: Disable 128x64 hi res graphics mode
+            ChangeGraphicsMode(GraphicsMode::e64x32);
+            break;
+
+        case 0x00FB: // 0x00FB: Scroll the display right by 4 pixels
+            // TODO
+            break;
+
+        case 0x00FC: // 0x00FC: Scroll the display left by 4 pixels
+            // TODO
+            break;
+
+        case 0x00FD: // 0x00FD Exit the Chip8/SuperChip interpreter
+            // TODO
+            break;
+        }
+
+        // 0x00CN Scroll the display down by 0 to 15 pixels
+        if ((mOpcode & 0x00F0) == 0x00C0)
+        {
+            // TODO
         }
     }
     break;
@@ -257,28 +283,35 @@ void Chip8::EmulateCycle()
      */
     case 0xD000:
     {
-        const uint16_t xPos = GetVX();
-        const uint16_t yPos = GetVY();
-        const uint16_t numRows = mOpcode & 0x000F;
-        constexpr uint16_t numCols = 8;
-        SetVF(0);
-
-        for (uint16_t row = 0; row < numRows; ++row)
+        if ((mOpcode & 0x000F) == 0)
         {
-            const uint8_t pixel = mMemory[mIndexReg + row];
-            for (uint16_t col = 0; col < numCols; ++col)
+            // TODO: 0xDXY0: Draw 16x16 sprite
+        }
+        else
+        {
+            const uint16_t xPos = GetVX();
+            const uint16_t yPos = GetVY();
+            const uint16_t numRows = mOpcode & 0x000F;
+            constexpr uint16_t numCols = 8;
+            SetVF(0);
+
+            for (uint16_t row = 0; row < numRows; ++row)
             {
-                if (pixel & (0x80 >> col))
+                const uint8_t pixel = mMemory[mIndexReg + row];
+                for (uint16_t col = 0; col < numCols; ++col)
                 {
-                    const uint16_t index = (xPos + col) + ((yPos + row) * GetScreenWidth());
-                    // TODO: The index can access out of bounds. Should figure out why.
-                    if (index >= std::size(mVram))
-                        continue;
+                    if (pixel & (0x80 >> col))
+                    {
+                        const uint16_t index = (xPos + col) + ((yPos + row) * GetScreenWidth());
+                        // TODO: The index can access out of bounds. Should figure out why.
+                        if (index >= std::size(mVram))
+                            continue;
 
-                    if (mVram[index] == 1)
-                        SetVF(1);
+                        if (mVram[index] == 1)
+                            SetVF(1);
 
-                    mVram[index] ^= 1;
+                        mVram[index] ^= 1;
+                    }
                 }
             }
         }
@@ -355,6 +388,10 @@ void Chip8::EmulateCycle()
             mIndexReg = GetVX() * 5;
             break;
 
+        case 0x0030: // 0xFX30 Set I to a large hex character based on the value of VX.
+            // TODO
+            break;
+
         /*
          * 0xFX33
          *
@@ -390,6 +427,14 @@ void Chip8::EmulateCycle()
             mIndexReg += ((mOpcode & 0x0F00) >> 8) + 1;
         }
         break;
+
+        case 0x0075: // 0xFX75 Save V0-VX to flag registers
+            // TODO
+            break;
+
+        case 0x0085: // 0xFX85 Restore V0-VX from flag registers
+            // TODO
+            break;
         }
     }
     break;
