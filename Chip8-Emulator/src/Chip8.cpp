@@ -240,7 +240,9 @@ void Chip8::EmulateCycle()
 
         case 0x0006: // 0x8XY6 Stores the least significant bit of VX in VF and then shifts VX to the right by 1.
         {
-            // TODO: If original COSMAC VIP, Set VX to VY before rest of op
+            if (mUseVYForShiftQuirk)
+                SetVX(GetVY());
+
             SetVF(GetVX() & 0x1);
             SetVX(GetVX() >> 1);
         }
@@ -258,7 +260,9 @@ void Chip8::EmulateCycle()
 
         case 0x000E: // 0x8XYE Stores the most significant bit of VX in VF and then shifts VX to the left by 1.
         {
-            // TODO: If original COSMAC VIP, Set VX to VY before rest of op
+            if (mUseVYForShiftQuirk)
+                SetVX(GetVY());
+
             SetVF(GetVX() >> 7);
             SetVX(GetVX() << 1);
         }
@@ -279,8 +283,10 @@ void Chip8::EmulateCycle()
         break;
 
     case 0xB000: // 0xBNNN Jumps to the address NNN plus V0
-        mPC = GetAddress() + mV[0];
-        // TODO: Super Chip changed to NNN plus VX
+        if (mUseBXNNQuirk)
+            mPC = GetAddress() + GetVX();
+        else
+            mPC = GetAddress() + mV[0];
         break;
 
     case 0xC000: // 0xCXNN Sets VX to the result of bitwise and op on a random number and NN
@@ -426,8 +432,9 @@ void Chip8::EmulateCycle()
             memcpy(std::data(mMemory) + mIndexReg, std::data(mV), ((mOpcode & 0x0F00) >> 8) + 1);
 
             // On the original interpreter, when the operation is done, I = I + X + 1.
-            // TODO: Newer implementations do not increment the I
-            mIndexReg += ((mOpcode & 0x0F00) >> 8) + 1;
+            // Newer implementations do not increment the I
+            if (mUseIndexIncrementAfterStoreLoadQuirk)
+                mIndexReg += ((mOpcode & 0x0F00) >> 8) + 1;
         }
         break;
 
@@ -436,8 +443,9 @@ void Chip8::EmulateCycle()
             memcpy(std::data(mV), std::data(mMemory) + mIndexReg, ((mOpcode & 0x0F00) >> 8) + 1);
 
             // On the original interpreter, when the operation is done, I = I + X + 1.
-            // TODO: Newer implementations do not increment the I
-            mIndexReg += ((mOpcode & 0x0F00) >> 8) + 1;
+            // Newer implementations do not increment the I
+            if (mUseIndexIncrementAfterStoreLoadQuirk)
+                mIndexReg += ((mOpcode & 0x0F00) >> 8) + 1;
         }
         break;
 

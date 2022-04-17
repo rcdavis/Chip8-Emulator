@@ -80,6 +80,15 @@ public:
     uint32_t GetUndrawnColor() const { return mUndrawnColor; }
     void SetUndrawnColor(const uint32_t color) { mUndrawnColor = color; }
 
+    bool GetUseVYForShiftQuirk() const { return mUseVYForShiftQuirk; }
+    void SetUseVYForShiftQuirk(const bool b) { mUseVYForShiftQuirk = b; }
+
+    bool GetUseBXNNQuirk() const { return mUseBXNNQuirk; }
+    void SetUseBXNNQuirk(const bool b) { mUseBXNNQuirk = b; }
+
+    bool GetUseIndexIncrementAfterStoreLoadQuirk() const { return mUseIndexIncrementAfterStoreLoadQuirk; }
+    void SetUseIndexIncrementAfterStoreLoadQuirk(const bool b) { mUseIndexIncrementAfterStoreLoadQuirk = b; }
+
 private:
     void Init();
 
@@ -109,6 +118,10 @@ private:
     uint8_t mEmuSpeedModifier = 1;
 
     bool mRedraw;
+
+    bool mUseVYForShiftQuirk = false;
+    bool mUseBXNNQuirk = false;
+    bool mUseIndexIncrementAfterStoreLoadQuirk = false;
 
     uint32_t mFrameRate;
 

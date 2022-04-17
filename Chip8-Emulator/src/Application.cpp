@@ -441,6 +441,22 @@ void Application::RenderChip8InfoPanel()
 
         ImGui::Separator();
 
+        ImGui::Text("Quirk Flags");
+
+        bool useVYShiftQuirk = mChip8.GetUseVYForShiftQuirk();
+        ImGui::Checkbox("Use VY For Shift", &useVYShiftQuirk);
+        mChip8.SetUseVYForShiftQuirk(useVYShiftQuirk);
+
+        bool useBXNN = mChip8.GetUseBXNNQuirk();
+        ImGui::Checkbox("Use BXNN", &useBXNN);
+        mChip8.SetUseBXNNQuirk(useBXNN);
+
+        bool useIndexIncrement = mChip8.GetUseIndexIncrementAfterStoreLoadQuirk();
+        ImGui::Checkbox("Use Index Increment After Store and Load Memory", &useIndexIncrement);
+        mChip8.SetUseIndexIncrementAfterStoreLoadQuirk(useIndexIncrement);
+
+        ImGui::Separator();
+
         ImGui::Text("Opcode: %X", mChip8.GetOpcode());
         ImGui::Text("Index Reg: %X", mChip8.GetIndexReg());
         ImGui::Text("Program Counter: %X", mChip8.GetProgramCounter());
