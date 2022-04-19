@@ -10,6 +10,8 @@
 class Chip8
 {
 public:
+    static constexpr uint32_t MEM_SIZE = 64 * 1024;
+
     using UpdateInputFunc = std::function<void(std::array<uint8_t, 16>&)>;
     using RenderFunc = std::function<void(const std::vector<uint32_t>&)>;
 
@@ -44,7 +46,7 @@ public:
 
     const std::filesystem::path& GetGameFile() const { return mGameFile; }
     std::vector<uint8_t>& GetVram() { return mVram; }
-    std::array<uint8_t, 4096>& GetMemory() { return mMemory; }
+    std::array<uint8_t, MEM_SIZE>& GetMemory() { return mMemory; }
     std::array<uint8_t, 16> GetVReg() const { return mV; }
     std::array<uint8_t, 16>& GetKeys() { return mKeys; }
     std::array<uint16_t, 16> GetStack() const { return mStack; }
@@ -100,8 +102,9 @@ private:
 
     std::filesystem::path mGameFile;
 
-    std::array<uint8_t, 4096> mMemory;
+    std::array<uint8_t, MEM_SIZE> mMemory;
     std::array<uint8_t, 16> mV;
+    std::array<uint8_t, 8> mRpl;
     std::vector<uint8_t> mVram;
 
     uint16_t mOpcode;
