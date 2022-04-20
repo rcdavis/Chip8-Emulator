@@ -70,14 +70,20 @@ bool Application::Init()
     });
 
     mMemoryEditor.Open = false;
+    mMemoryEditor.OptShowDataPreview = true;
+
     mVramEditor.Open = false;
+    mVramEditor.OptShowDataPreview = true;
 
     mChip8.SetUpdateInputFunc(std::bind(&Application::UpdateInput, this, std::placeholders::_1));
     mChip8.SetRenderFunc(std::bind(&Application::DrawChip8, this, std::placeholders::_1));
+    mChip8.SetOpcodeLogFunc(std::bind(&Application::AddOpcodeLogLine, this, std::placeholders::_1));
 
     mFrameBuffer.Bind();
     glClear(GL_COLOR_BUFFER_BIT);
     mFrameBuffer.Unbind();
+
+    mOpcodeLogPanel.SetWindow(mWindow);
 
     LoadEmulatorSettings();
 
@@ -367,6 +373,8 @@ void Application::ImGuiRender()
 
     RenderChip8InfoPanel();
 
+    mOpcodeLogPanel.Render();
+
     ImGui::End();
 }
 
@@ -406,6 +414,10 @@ void Application::ImGuiMainMenuRender()
             ImGui::MenuItem("Chip8 Info", nullptr, &mIsChip8InfoWindowOpen);
             ImGui::MenuItem("Memory", nullptr, &mMemoryEditor.Open);
             ImGui::MenuItem("VRAM", nullptr, &mVramEditor.Open);
+            bool isOpcodeLogOpen = mOpcodeLogPanel.IsOpen();
+            ImGui::MenuItem("Opcode Log", nullptr, &isOpcodeLogOpen);
+            mOpcodeLogPanel.Open(isOpcodeLogOpen);
+
             ImGui::EndMenu();
         }
 
@@ -506,6 +518,8 @@ void Application::LoadEmulatorSettings()
             mMemoryEditor.Open = (bool)std::stoi(value);
         else if (key == "vramWindowOpen")
             mVramEditor.Open = (bool)std::stoi(value);
+        else if (key == "opcodesLogOpen")
+            mOpcodeLogPanel.Open((bool)std::stoi(value));
         else if (key == "emuSpeedModifier")
             mChip8.SetEmuSpeedModifier((uint8_t)std::stoi(value));
         else if (key == "drawnColor")
@@ -528,7 +542,14 @@ void Application::SaveEmulatorSettings()
     file << "chip8InfoWindowOpen=" << mIsChip8InfoWindowOpen << '\n';
     file << "memoryWindowOpen=" << mMemoryEditor.Open << '\n';
     file << "vramWindowOpen=" << mVramEditor.Open << '\n';
+    file << "opcodesLogOpen=" << mOpcodeLogPanel.IsOpen() << '\n';
     file << "emuSpeedModifier=" << (uint32_t)mChip8.GetEmuSpeedModifier() << '\n';
     file << "drawnColor=" << mChip8.GetDrawnColor() << '\n';
     file << "undrawnColor=" << mChip8.GetUndrawnColor() << '\n';
+}
+
+void Application::AddOpcodeLogLine(const std::string& line)
+{
+    if (mOpcodeLogPanel.IsOpen())
+        mOpcodeLogPanel.AddLine(line);
 }

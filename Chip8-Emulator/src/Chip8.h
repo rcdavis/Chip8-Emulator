@@ -14,6 +14,7 @@ public:
 
     using UpdateInputFunc = std::function<void(std::array<uint8_t, 16>&)>;
     using RenderFunc = std::function<void(const std::vector<uint32_t>&)>;
+    using OpcodeLogFunc = std::function<void(const std::string&)>;
 
     enum class GraphicsMode
     {
@@ -34,8 +35,9 @@ public:
     uint32_t GetFrameRate() const { return mFrameRate; }
     void SetFrameRate(uint32_t fps) { mFrameRate = fps; }
 
-    void SetUpdateInputFunc(UpdateInputFunc func) { mUpdateInputFunc = func; }
-    void SetRenderFunc(RenderFunc func) { mRenderFunc = func; }
+    void SetUpdateInputFunc(const UpdateInputFunc& func) { mUpdateInputFunc = func; }
+    void SetRenderFunc(const RenderFunc& func) { mRenderFunc = func; }
+    void SetOpcodeLogFunc(const OpcodeLogFunc& func) { mOpcodeLogFunc = func; }
 
     uint16_t GetScreenWidth() const;
     uint16_t GetScreenHeight() const;
@@ -99,6 +101,7 @@ private:
 private:
     UpdateInputFunc mUpdateInputFunc;
     RenderFunc mRenderFunc;
+    OpcodeLogFunc mOpcodeLogFunc;
 
     std::filesystem::path mGameFile;
 

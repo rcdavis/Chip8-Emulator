@@ -129,32 +129,46 @@ void Chip8::EmulateCycle()
         {
             memset(std::data(mVram), 0, std::size(mVram));
             mRedraw = true;
+            if (mOpcodeLogFunc)
+                mOpcodeLogFunc("0x00E0: Clear Screen");
         }
         break;
 
         case 0x00EE: // 0x00EE: Returns from subroutine
             mPC = mStack[--mSP];
+            if (mOpcodeLogFunc)
+                mOpcodeLogFunc(StringUtils::Format("0x00E0: PC=%X", mPC));
             break;
 
-        case 0x00FF: // 0x00FF: Enable 128x64 hi res graphics mode
+        case 0x00FF: // 0x00FF: Enable 128x64 high res graphics mode
             ChangeGraphicsMode(GraphicsMode::e128x64);
+            if (mOpcodeLogFunc)
+                mOpcodeLogFunc("0x00FF: Enable high res");
             break;
 
-        case 0x00FE: // 0x00FE: Disable 128x64 hi res graphics mode
+        case 0x00FE: // 0x00FE: Disable 128x64 high res graphics mode
             ChangeGraphicsMode(GraphicsMode::e64x32);
+            if (mOpcodeLogFunc)
+                mOpcodeLogFunc("0x00FE: Disable high res");
             break;
 
         case 0x00FB: // 0x00FB: Scroll the display right by 4 pixels
             // TODO
+            if (mOpcodeLogFunc)
+                mOpcodeLogFunc("0x00FB: Scroll display right by 4 pixels");
             break;
 
         case 0x00FC: // 0x00FC: Scroll the display left by 4 pixels
             // TODO
+            if (mOpcodeLogFunc)
+                mOpcodeLogFunc("0x00FC: Scroll display left by 4 pixels");
             break;
 
         case 0x00FD: // 0x00FD Exit the Chip8/SuperChip interpreter
             Init();
             mGameFile = "";
+            if (mOpcodeLogFunc)
+                mOpcodeLogFunc("0x00FD: Exit Chip8/Super Chip");
             return;
         }
 
@@ -162,16 +176,22 @@ void Chip8::EmulateCycle()
         if ((mOpcode & 0x00F0) == 0x00C0)
         {
             // TODO
+            if (mOpcodeLogFunc)
+                mOpcodeLogFunc(StringUtils::Format("0x00CN: Scroll display down N=%d", mOpcode & 0x000F));
         }
     }
     break;
 
     case 0x1000: // 0x1NNN Jump to address NNN
         mPC = GetAddress();
+        if (mOpcodeLogFunc)
+            mOpcodeLogFunc(StringUtils::Format("0x1NNN: Jump to address NNN=%X", GetAddress()));
         break;
 
     case 0x2000: // 0x2NNN Calls subroutine at NNN
     {
+        if (mOpcodeLogFunc)
+            mOpcodeLogFunc(StringUtils::Format("0x2NNN: Calls subroutine PC(before)=%X NNN=%X", mPC, GetAddress()));
         mStack[mSP++] = mPC;
         mPC = GetAddress();
     }
@@ -181,6 +201,8 @@ void Chip8::EmulateCycle()
     {
         if (GetVX() == GetNN())
             mPC += 2;
+        if (mOpcodeLogFunc)
+            mOpcodeLogFunc(StringUtils::Format("0x3XNN: VX=%d NN=%d", GetVX(), GetNN()));
     }
     break;
 
@@ -188,6 +210,8 @@ void Chip8::EmulateCycle()
     {
         if (GetVX() != GetNN())
             mPC += 2;
+        if (mOpcodeLogFunc)
+            mOpcodeLogFunc(StringUtils::Format("0x4XNN: VX=%d NN=%d", GetVX(), GetNN()));
     }
     break;
 
@@ -195,14 +219,20 @@ void Chip8::EmulateCycle()
     {
         if (GetVX() == GetVY())
             mPC += 2;
+        if (mOpcodeLogFunc)
+            mOpcodeLogFunc(StringUtils::Format("0x5XY0: VX=%d VY=%d", GetVX(), GetVY()));
     }
     break;
 
     case 0x6000: // 0x6XNN Sets VX to NN
+        if (mOpcodeLogFunc)
+            mOpcodeLogFunc(StringUtils::Format("0x6XNN: VX(before)=%d NN=%d", GetVX(), GetNN()));
         SetVX(GetNN());
         break;
 
     case 0x7000: // 0x7XNN Adds NN to VX (Carry flag is not changed)
+        if (mOpcodeLogFunc)
+            mOpcodeLogFunc(StringUtils::Format("0x7XNN: VX=%d NN=%d VX+NN=%d", GetVX(), GetNN(), GetVX() + GetNN()));
         SetVX(GetVX() + GetNN());
         break;
 
@@ -211,18 +241,29 @@ void Chip8::EmulateCycle()
         switch (mOpcode & 0x000F)
         {
         case 0x0000: // 0x8XY0 Set VX to VY
+            if (mOpcodeLogFunc)
+                mOpcodeLogFunc(StringUtils::Format("0x8XY0: VX=%d VY=%d", GetVX(), GetVY()));
             SetVX(GetVY());
             break;
 
         case 0x0001: // 0x8XY1 Set VX to VX or VY
+            if (mOpcodeLogFunc)
+                mOpcodeLogFunc(StringUtils::Format("0x8XY1: VX=%d VY=%d VX|VY=%d",
+                    GetVX(), GetVY(), GetVX() | GetVY()));
             SetVX(GetVX() | GetVY());
             break;
 
         case 0x0002: // 0x8XY2 Set VX to VX and VY
+            if (mOpcodeLogFunc)
+                mOpcodeLogFunc(StringUtils::Format("0x8XY2: VX=%d VY=%d VX&VY=%d",
+                    GetVX(), GetVY(), GetVX() & GetVY()));
             SetVX(GetVX() & GetVY());
             break;
 
         case 0x0003: // 0x8XY3 Set VX to VX xor VY
+            if (mOpcodeLogFunc)
+                mOpcodeLogFunc(StringUtils::Format("0x8XY3: VX=%d VY=%d VX^VY=%d",
+                    GetVX(), GetVY(), GetVX() ^ GetVY()));
             SetVX(GetVX() ^ GetVY());
             break;
 
@@ -232,6 +273,9 @@ void Chip8::EmulateCycle()
                 SetVF(1);
             else
                 SetVF(0);
+            if (mOpcodeLogFunc)
+                mOpcodeLogFunc(StringUtils::Format("0x8XY4: VX=%d VY=%d VX+VY=%d VF=%d",
+                    GetVX(), GetVY(), GetVX() + GetVY(), GetVF()));
             SetVX(GetVX() + GetVY());
         }
         break;
@@ -242,6 +286,9 @@ void Chip8::EmulateCycle()
                 SetVF(1);
             else
                 SetVF(0);
+            if (mOpcodeLogFunc)
+                mOpcodeLogFunc(StringUtils::Format("0x8XY5: VX=%d VY=%d VX-VY=%d VF=%d",
+                    GetVX(), GetVY(), GetVX() - GetVY(), GetVF()));
             SetVX(GetVX() - GetVY());
         }
         break;
@@ -253,6 +300,8 @@ void Chip8::EmulateCycle()
 
             SetVF(GetVX() & 0x1);
             SetVX(GetVX() >> 1);
+            if (mOpcodeLogFunc)
+                mOpcodeLogFunc(StringUtils::Format("0x8XY6: VX=%d VF=%d", GetVX(), GetVF()));
         }
         break;
 
@@ -262,6 +311,9 @@ void Chip8::EmulateCycle()
                 SetVF(1);
             else
                 SetVF(0);
+            if (mOpcodeLogFunc)
+                mOpcodeLogFunc(StringUtils::Format("0x8XY7: VX=%d VY=%d VY-VX=%d VF=%d",
+                    GetVX(), GetVY(), GetVY() - GetVX(), GetVF()));
             SetVX(GetVY() - GetVX());
         }
         break;
@@ -273,6 +325,8 @@ void Chip8::EmulateCycle()
 
             SetVF(GetVX() >> 7);
             SetVX(GetVX() << 1);
+            if (mOpcodeLogFunc)
+                mOpcodeLogFunc(StringUtils::Format("0x8XYE: VX=%d VF=%d", GetVX(), GetVF()));
         }
         break;
         }
@@ -283,11 +337,15 @@ void Chip8::EmulateCycle()
     {
         if (GetVX() != GetVY())
             mPC += 2;
+        if (mOpcodeLogFunc)
+            mOpcodeLogFunc(StringUtils::Format("0x9XY0: VX=%d VY=%d", GetVX(), GetVY()));
     }
     break;
 
     case 0xA000: // 0xANNN Sets I to the address NNN
         mIndexReg = GetAddress();
+        if (mOpcodeLogFunc)
+            mOpcodeLogFunc(StringUtils::Format("0xANNN: I=%X NNN=%X", mIndexReg, GetAddress()));
         break;
 
     case 0xB000: // 0xBNNN Jumps to the address NNN plus V0
@@ -295,11 +353,18 @@ void Chip8::EmulateCycle()
             mPC = GetAddress() + GetVX();
         else
             mPC = GetAddress() + mV[0];
+        if (mOpcodeLogFunc)
+            mOpcodeLogFunc(StringUtils::Format("0xBNNN: VX=%d V0=%d NNN=%X", GetVX(), mV[0], GetAddress()));
         break;
 
     case 0xC000: // 0xCXNN Sets VX to the result of bitwise and op on a random number and NN
-        SetVX((rand() & 0xFF) & GetNN());
-        break;
+    {
+        const uint8_t randVal = rand() & 0xFF;
+        SetVX(randVal & GetNN());
+        if (mOpcodeLogFunc)
+            mOpcodeLogFunc(StringUtils::Format("0xCXNN: randVal=%d NN=%d", randVal, GetNN()));
+    }
+    break;
 
     /*
      * 0xDXYN
@@ -368,6 +433,8 @@ void Chip8::EmulateCycle()
         }
 
         mRedraw = true;
+        if (mOpcodeLogFunc)
+            mOpcodeLogFunc(StringUtils::Format("0xDXYN: N=%d", mOpcode & 0x000F));
     }
     break;
 
@@ -379,6 +446,8 @@ void Chip8::EmulateCycle()
         {
             if (mKeys[GetVX()] != 0)
                 mPC += 2;
+            if (mOpcodeLogFunc)
+                mOpcodeLogFunc(StringUtils::Format("0xEX9E: VX=%d Key[VX]=%d", GetVX(), mKeys[GetVX()]));
         }
         break;
 
@@ -386,6 +455,8 @@ void Chip8::EmulateCycle()
         {
             if (mKeys[GetVX()] == 0)
                 mPC += 2;
+            if (mOpcodeLogFunc)
+                mOpcodeLogFunc(StringUtils::Format("0xEXA1: VX=%d Key[VX]=%d", GetVX(), mKeys[GetVX()]));
         }
         break;
         }
@@ -398,6 +469,8 @@ void Chip8::EmulateCycle()
         {
         case 0x0007: // 0xFX07 Sets VX to the value of the delay timer.
             SetVX(mDelayTimer);
+            if (mOpcodeLogFunc)
+                mOpcodeLogFunc(StringUtils::Format("0xFX07: DelayTimer=%d", mDelayTimer));
             break;
 
         /*
@@ -420,15 +493,22 @@ void Chip8::EmulateCycle()
 
             if (!keyPressed)
                 mPC -= 2;
+
+            if (mOpcodeLogFunc)
+                mOpcodeLogFunc(StringUtils::Format("0xFX0A: key pressed=%d", keyPressed));
         }
         break;
 
         case 0x0015: // 0xFX15 Sets delay timer to VX.
             mDelayTimer = GetVX();
+            if (mOpcodeLogFunc)
+                mOpcodeLogFunc(StringUtils::Format("0xFX15: DelayTimer=%d", mDelayTimer));
             break;
 
         case 0x0018: // 0xFX18 Sets sound timer to VX.
             mSoundTimer = GetVX();
+            if (mOpcodeLogFunc)
+                mOpcodeLogFunc(StringUtils::Format("0xFX18: SoundTimer=%d", mSoundTimer));
             break;
 
         case 0x001E: // 0xFX1E Adds VX to I
@@ -436,15 +516,21 @@ void Chip8::EmulateCycle()
                 SetVF(1);
             else
                 SetVF(0);
+            if (mOpcodeLogFunc)
+                mOpcodeLogFunc(StringUtils::Format("0xFX1E: VX=%d I=%d VX+I=%X", GetVX(), mIndexReg, mIndexReg + GetVX()));
             mIndexReg += GetVX();
             break;
 
         case 0x0029: // 0xFX29 Sets I to the location of the sprite for the character in VX. Characters 0-F (in hexadecimal) are represented by a 4x5 font.
             mIndexReg = GetVX() * 5;
+            if (mOpcodeLogFunc)
+                mOpcodeLogFunc(StringUtils::Format("0xFX29: VX=%d I=%d", GetVX(), mIndexReg));
             break;
 
         case 0x0030: // 0xFX30 Set I to a large hex character based on the value of VX.
             mIndexReg = GetVX() * 10 + 80; // 80 is the start of the hi res font
+            if (mOpcodeLogFunc)
+                mOpcodeLogFunc(StringUtils::Format("0xFX30: VX=%d I=%d", GetVX(), mIndexReg));
             break;
 
         /*
@@ -460,6 +546,9 @@ void Chip8::EmulateCycle()
             mMemory[mIndexReg] = GetVX() / 100;
             mMemory[mIndexReg + 1] = (GetVX() / 10) % 10;
             mMemory[mIndexReg + 2] = (GetVX() % 100) % 10;
+
+            if (mOpcodeLogFunc)
+                mOpcodeLogFunc(StringUtils::Format("0xFX33: VX=%d", GetVX()));
         }
         break;
 
@@ -471,6 +560,9 @@ void Chip8::EmulateCycle()
             // Newer implementations do not increment the I
             if (mUseIndexIncrementAfterStoreLoadQuirk)
                 mIndexReg += ((mOpcode & 0x0F00) >> 8) + 1;
+
+            if (mOpcodeLogFunc)
+                mOpcodeLogFunc(StringUtils::Format("0xFX55: I=%X X=%d", mIndexReg, (mOpcode & 0x0F00) >> 8));
         }
         break;
 
@@ -482,15 +574,22 @@ void Chip8::EmulateCycle()
             // Newer implementations do not increment the I
             if (mUseIndexIncrementAfterStoreLoadQuirk)
                 mIndexReg += ((mOpcode & 0x0F00) >> 8) + 1;
+
+            if (mOpcodeLogFunc)
+                mOpcodeLogFunc(StringUtils::Format("0xFX65: I=%X X=%d", mIndexReg, (mOpcode & 0x0F00 >> 8)));
         }
         break;
 
         case 0x0075: // 0xFX75 Save V0-VX to flag registers
             memcpy(std::data(mRpl), std::data(mV), ((mOpcode & 0x0F00) >> 8) + 1);
+            if (mOpcodeLogFunc)
+                mOpcodeLogFunc(StringUtils::Format("0xFX75: size=%d", ((mOpcode & 0x0F00) >> 8) + 1));
             break;
 
         case 0x0085: // 0xFX85 Restore V0-VX from flag registers
             memcpy(std::data(mV), std::data(mRpl), ((mOpcode & 0x0F00) >> 8) + 1);
+            if (mOpcodeLogFunc)
+                mOpcodeLogFunc(StringUtils::Format("0xFX85: size=%d", ((mOpcode & 0x0F00) >> 8) + 1));
             break;
         }
     }

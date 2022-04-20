@@ -3,6 +3,7 @@
 #include "Chip8.h"
 #include "OpenGL/OpenGLShader.h"
 #include "OpenGL/OpenGLFramebuffer.h"
+#include "Panels/OpcodeLogPanel.h"
 
 #include <imgui.h>
 #include <imgui_memory_editor.h>
@@ -51,6 +52,8 @@ private:
     void LoadEmulatorSettings();
     void SaveEmulatorSettings();
 
+    void AddOpcodeLogLine(const std::string& line);
+
 private:
     Chip8 mChip8;
     GLFWwindow* mWindow = nullptr;
@@ -60,6 +63,8 @@ private:
     uint32_t mTexture = 0;
     OpenGLShader mShader;
     OpenGLFramebuffer mFrameBuffer;
+
+    OpcodeLogPanel mOpcodeLogPanel;
 
     MemoryEditor mMemoryEditor;
     MemoryEditor mVramEditor;
