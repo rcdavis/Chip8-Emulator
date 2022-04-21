@@ -281,7 +281,7 @@ void Application::InitTexture()
 
 void Application::InitShader()
 {
-    constexpr char* vertexSrc = "#version 450 core\n"
+    constexpr char* vertexSrc = "#version 460 core\n"
         "layout(location = 0) in vec2 a_Position;\n"
         "layout(location = 1) in vec2 a_TexCoord;\n"
         "layout(location = 0) out vec2 v_TexCoord;\n"
@@ -290,7 +290,7 @@ void Application::InitShader()
         "gl_Position = vec4(a_Position, 0.0, 1.0);\n"
         "}";
 
-    constexpr char* fragmentSrc = "#version 450 core\n"
+    constexpr char* fragmentSrc = "#version 460 core\n"
         "layout(location = 0) in vec2 v_TexCoord;\n"
         "out vec4 color;\n"
         "layout(binding = 0) uniform sampler2D u_Texture;\n"
@@ -322,7 +322,7 @@ void Application::InitImGui()
     }
 
     ImGui_ImplGlfw_InitForOpenGL(mWindow, true);
-    ImGui_ImplOpenGL3_Init("#version 450 core");
+    ImGui_ImplOpenGL3_Init("#version 460 core");
 
     mImGuiInitialized = true;
 }
