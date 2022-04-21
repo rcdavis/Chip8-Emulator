@@ -54,6 +54,13 @@ private:
     void AddOpcodeLogLine(const std::string& line);
 
 private:
+    enum class Theme
+    {
+        Light,
+        Dark
+    };
+
+private:
     Chip8 mChip8;
     GLFWwindow* mWindow = nullptr;
     uint32_t mVAO = 0;
@@ -68,6 +75,8 @@ private:
 
     MemoryEditor mMemoryEditor;
     MemoryEditor mVramEditor;
+
+    Theme mTheme = Theme::Dark;
 
     bool mImGuiInitialized = false;
     bool mIsMetricsWindowOpen = true;

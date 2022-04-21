@@ -297,7 +297,10 @@ void Application::InitImGui()
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
-    ImGui::StyleColorsDark();
+    if (mTheme == Theme::Light)
+        ImGui::StyleColorsLight();
+    else
+        ImGui::StyleColorsDark();
 
     ImGuiStyle& style = ImGui::GetStyle();
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
@@ -486,9 +489,15 @@ void Application::ImGuiMainMenuRender()
             if (ImGui::BeginMenu("Theme"))
             {
                 if (ImGui::MenuItem("Light"))
+                {
+                    mTheme = Theme::Light;
                     ImGui::StyleColorsLight();
+                }
                 else if (ImGui::MenuItem("Dark"))
+                {
+                    mTheme = Theme::Dark;
                     ImGui::StyleColorsDark();
+                }
 
                 ImGui::EndMenu();
             }
@@ -555,6 +564,14 @@ void Application::LoadEmulatorSettings()
             mChip8.SetDrawnColor((uint32_t)std::stoul(value));
         else if (key == "undrawnColor")
             mChip8.SetUndrawnColor((uint32_t)std::stoul(value));
+        else if (key == "theme")
+        {
+            mTheme = (Theme)std::stoul(value);
+            if (mTheme == Theme::Light)
+                ImGui::StyleColorsLight();
+            else
+                ImGui::StyleColorsDark();
+        }
     }
 }
 
@@ -567,6 +584,7 @@ void Application::SaveEmulatorSettings()
         return;
     }
 
+    file << "theme=" << (uint32_t)mTheme << '\n';
     file << "metricsWindowOpen=" << mIsMetricsWindowOpen << '\n';
     file << "chip8InfoWindowOpen=" << mIsChip8InfoWindowOpen << '\n';
     file << "memoryWindowOpen=" << mMemoryEditor.Open << '\n';
