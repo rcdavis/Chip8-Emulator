@@ -106,11 +106,7 @@ void Application::Shutdown()
     mShader.Delete();
     mFrameBuffer.Destroy();
 
-    if (mTexture)
-    {
-        glDeleteTextures(1, &mTexture);
-        mTexture = 0;
-    }
+    mTexture.Destroy();
 
     if (mVertexBuffer)
     {
@@ -268,15 +264,7 @@ void Application::InitIndexBuffer()
 
 void Application::InitTexture()
 {
-    glActiveTexture(GL_TEXTURE0);
-    glGenTextures(1, &mTexture);
-    glBindTexture(GL_TEXTURE_2D, mTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, mChip8.GetScreenWidth(), mChip8.GetScreenHeight(),
-        0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-    glTextureParameteri(mTexture, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTextureParameteri(mTexture, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTextureParameteri(mTexture, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTextureParameteri(mTexture, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    mTexture.Create(mChip8.GetScreenWidth(), mChip8.GetScreenHeight());
 }
 
 void Application::InitShader()
@@ -427,8 +415,7 @@ void Application::DrawChip8(const std::vector<uint32_t>& vram)
     glClear(GL_COLOR_BUFFER_BIT);
     glBindVertexArray(mVAO);
 
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, mChip8.GetScreenWidth(), mChip8.GetScreenHeight(),
-        GL_RGBA, GL_UNSIGNED_BYTE, std::data(vram));
+    mTexture.Update(mChip8.GetScreenWidth(), mChip8.GetScreenHeight(), (const char*)std::data(vram));
 
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, nullptr);
     mFrameBuffer.Unbind();

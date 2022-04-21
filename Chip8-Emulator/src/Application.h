@@ -3,6 +3,7 @@
 #include "Chip8.h"
 #include "OpenGL/OpenGLShader.h"
 #include "OpenGL/OpenGLFramebuffer.h"
+#include "OpenGL/OpenGLTexture.h"
 #include "Panels/OpcodeLogPanel.h"
 
 #include <imgui.h>
@@ -60,9 +61,9 @@ private:
     uint32_t mVAO = 0;
     uint32_t mVertexBuffer = 0;
     uint32_t mIndexBuffer = 0;
-    uint32_t mTexture = 0;
     OpenGLShader mShader;
     OpenGLFramebuffer mFrameBuffer;
+    OpenGLTexture mTexture;
 
     OpcodeLogPanel mOpcodeLogPanel;
 
