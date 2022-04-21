@@ -2,6 +2,7 @@
 
 #include "Log.h"
 #include "Utils/PlatformUtils.h"
+#include "Utils/FileUtils.h"
 
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
@@ -185,10 +186,49 @@ void Application::KeyCallback(int key, int scancode, int action, int mods)
     {
         if (key == GLFW_KEY_O && mods == GLFW_MOD_CONTROL)
             LoadGame();
+        else if (mods == GLFW_MOD_SHIFT)
+        {
+            if (key == GLFW_KEY_F1)
+                mChip8.SaveState(1);
+            else if (key == GLFW_KEY_F2)
+                mChip8.SaveState(2);
+            else if (key == GLFW_KEY_F3)
+                mChip8.SaveState(3);
+            else if (key == GLFW_KEY_F4)
+                mChip8.SaveState(4);
+            else if (key == GLFW_KEY_F5)
+                mChip8.SaveState(5);
+            else if (key == GLFW_KEY_F6)
+                mChip8.SaveState(6);
+            else if (key == GLFW_KEY_F7)
+                mChip8.SaveState(7);
+            else if (key == GLFW_KEY_F8)
+                mChip8.SaveState(8);
+            else if (key == GLFW_KEY_F9)
+                mChip8.SaveState(9);
+            else if (key == GLFW_KEY_F10)
+                mChip8.SaveState(10);
+        }
         else if (key == GLFW_KEY_F1)
-            mChip8.SaveState();
+            mChip8.LoadState(1);
         else if (key == GLFW_KEY_F2)
-            mChip8.LoadState();
+            mChip8.LoadState(2);
+        else if (key == GLFW_KEY_F3)
+            mChip8.LoadState(3);
+        else if (key == GLFW_KEY_F4)
+            mChip8.LoadState(4);
+        else if (key == GLFW_KEY_F5)
+            mChip8.LoadState(5);
+        else if (key == GLFW_KEY_F6)
+            mChip8.LoadState(6);
+        else if (key == GLFW_KEY_F7)
+            mChip8.LoadState(7);
+        else if (key == GLFW_KEY_F8)
+            mChip8.LoadState(8);
+        else if (key == GLFW_KEY_F9)
+            mChip8.LoadState(9);
+        else if (key == GLFW_KEY_F10)
+            mChip8.LoadState(10);
     }
 }
 
@@ -375,6 +415,9 @@ void Application::ImGuiRender()
 
     mOpcodeLogPanel.Render();
 
+    static bool demoOpen = true;
+    ImGui::ShowDemoWindow(&demoOpen);
+
     ImGui::End();
 }
 
@@ -400,10 +443,71 @@ void Application::ImGuiMainMenuRender()
             if (ImGui::MenuItem("Load Game", "Ctrl+O"))
                 LoadGame();
             ImGui::Separator();
-            if (ImGui::MenuItem("Save State", nullptr, nullptr, !std::empty(mChip8.GetGameFile())))
-                mChip8.SaveState();
-            if (ImGui::MenuItem("Load State", nullptr, nullptr, !std::empty(mChip8.GetGameFile())))
-                mChip8.LoadState();
+            if (ImGui::BeginMenu("Save State", !std::empty(mChip8.GetGameFile())))
+            {
+                if (ImGui::MenuItem("State 1", "Shift+F1"))
+                    mChip8.SaveState(1);
+                else if (ImGui::MenuItem("State 2", "Shift+F2"))
+                    mChip8.SaveState(2);
+                else if (ImGui::MenuItem("State 3", "Shift+F3"))
+                    mChip8.SaveState(3);
+                else if (ImGui::MenuItem("State 4", "Shift+F4"))
+                    mChip8.SaveState(4);
+                else if (ImGui::MenuItem("State 5", "Shift+F5"))
+                    mChip8.SaveState(5);
+                else if (ImGui::MenuItem("State 6", "Shift+F6"))
+                    mChip8.SaveState(6);
+                else if (ImGui::MenuItem("State 7", "Shift+F7"))
+                    mChip8.SaveState(7);
+                else if (ImGui::MenuItem("State 8", "Shift+F8"))
+                    mChip8.SaveState(8);
+                else if (ImGui::MenuItem("State 9", "Shift+F9"))
+                    mChip8.SaveState(9);
+                else if (ImGui::MenuItem("State 10", "Shift+F10"))
+                    mChip8.SaveState(10);
+
+                ImGui::EndMenu();
+            }
+            if (ImGui::BeginMenu("Load State", !std::empty(mChip8.GetGameFile())))
+            {
+                if (ImGui::MenuItem("State 1", "F1"))
+                    mChip8.LoadState(1);
+                else if (ImGui::MenuItem("State 2", "F2"))
+                    mChip8.LoadState(2);
+                else if (ImGui::MenuItem("State 3", "F3"))
+                    mChip8.LoadState(3);
+                else if (ImGui::MenuItem("State 4", "F4"))
+                    mChip8.LoadState(4);
+                else if (ImGui::MenuItem("State 5", "F5"))
+                    mChip8.LoadState(5);
+                else if (ImGui::MenuItem("State 6", "F6"))
+                    mChip8.LoadState(6);
+                else if (ImGui::MenuItem("State 7", "F7"))
+                    mChip8.LoadState(7);
+                else if (ImGui::MenuItem("State 8", "F8"))
+                    mChip8.LoadState(8);
+                else if (ImGui::MenuItem("State 9", "F9"))
+                    mChip8.LoadState(9);
+                else if (ImGui::MenuItem("State 10", "F10"))
+                    mChip8.LoadState(10);
+
+                ImGui::EndMenu();
+            }
+
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Edit"))
+        {
+            if (ImGui::BeginMenu("Theme"))
+            {
+                if (ImGui::MenuItem("Light"))
+                    ImGui::StyleColorsLight();
+                else if (ImGui::MenuItem("Dark"))
+                    ImGui::StyleColorsDark();
+
+                ImGui::EndMenu();
+            }
 
             ImGui::EndMenu();
         }
@@ -414,6 +518,7 @@ void Application::ImGuiMainMenuRender()
             ImGui::MenuItem("Chip8 Info", nullptr, &mIsChip8InfoWindowOpen);
             ImGui::MenuItem("Memory", nullptr, &mMemoryEditor.Open);
             ImGui::MenuItem("VRAM", nullptr, &mVramEditor.Open);
+
             bool isOpcodeLogOpen = mOpcodeLogPanel.IsOpen();
             ImGui::MenuItem("Opcode Log", nullptr, &isOpcodeLogOpen);
             mOpcodeLogPanel.Open(isOpcodeLogOpen);
@@ -497,7 +602,7 @@ void Application::LoadEmulatorSettings()
     std::ifstream file("emulator.ini");
     if (!file)
     {
-        LOG_ERROR("Failed to load emulator settings");
+        LOG_WARN("Failed to load emulator settings");
         return;
     }
 
