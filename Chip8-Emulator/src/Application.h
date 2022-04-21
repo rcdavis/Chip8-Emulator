@@ -5,6 +5,7 @@
 #include "OpenGL/OpenGLFramebuffer.h"
 #include "OpenGL/OpenGLTexture.h"
 #include "Panels/OpcodeLogPanel.h"
+#include "Panels/Chip8InfoPanel.h"
 
 #include <imgui.h>
 #include <imgui_memory_editor.h>
@@ -33,7 +34,6 @@ private:
 
     void InitVertexBuffer();
     void InitIndexBuffer();
-    void InitTexture();
     void InitShader();
     void InitImGui();
 
@@ -47,8 +47,6 @@ private:
     void DrawChip8(const std::vector<uint32_t>& vram);
 
     void LoadGame();
-
-    void RenderChip8InfoPanel();
 
     void LoadEmulatorSettings();
     void SaveEmulatorSettings();
@@ -66,6 +64,7 @@ private:
     OpenGLTexture mTexture;
 
     OpcodeLogPanel mOpcodeLogPanel;
+    Chip8InfoPanel mChip8InfoPanel;
 
     MemoryEditor mMemoryEditor;
     MemoryEditor mVramEditor;

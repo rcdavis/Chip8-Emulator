@@ -55,7 +55,7 @@ bool Application::Init()
 
     InitVertexBuffer();
     InitIndexBuffer();
-    InitTexture();
+    mTexture.Create(mChip8.GetScreenWidth(), mChip8.GetScreenHeight());
     InitShader();
     InitImGui();
 
@@ -87,6 +87,8 @@ bool Application::Init()
     mOpcodeLogPanel.SetWindow(mWindow);
 
     LoadEmulatorSettings();
+
+    mChip8InfoPanel.SetChip8(&mChip8);
 
     return true;
 }
@@ -262,11 +264,6 @@ void Application::InitIndexBuffer()
         std::data(indices), GL_STATIC_DRAW);
 }
 
-void Application::InitTexture()
-{
-    mTexture.Create(mChip8.GetScreenWidth(), mChip8.GetScreenHeight());
-}
-
 void Application::InitShader()
 {
     constexpr char* vertexSrc = "#version 460 core\n"
@@ -399,7 +396,7 @@ void Application::ImGuiRender()
     if (mVramEditor.Open)
         mVramEditor.DrawWindow("VRAM", std::data(mChip8.GetVram()), std::size(mChip8.GetVram()));
 
-    RenderChip8InfoPanel();
+    mChip8InfoPanel.Render();
 
     mOpcodeLogPanel.Render();
 
@@ -522,66 +519,6 @@ void Application::LoadGame()
     auto filepath = FileDialogs::OpenFile(mWindow, DialogFilter);
     if (filepath)
         mChip8.LoadGame(*filepath);
-}
-
-void Application::RenderChip8InfoPanel()
-{
-    if (!mIsChip8InfoWindowOpen)
-        return;
-
-    if (ImGui::Begin("Chip8 Info", &mIsChip8InfoWindowOpen))
-    {
-        ImVec4 drawnColor = ImGui::ColorConvertU32ToFloat4(mChip8.GetDrawnColor());
-        ImGui::ColorEdit4("Drawn", &drawnColor.x);
-        mChip8.SetDrawnColor(ImGui::ColorConvertFloat4ToU32(drawnColor));
-
-        ImVec4 undrawnColor = ImGui::ColorConvertU32ToFloat4(mChip8.GetUndrawnColor());
-        ImGui::ColorEdit4("Undrawn", &undrawnColor.x);
-        mChip8.SetUndrawnColor(ImGui::ColorConvertFloat4ToU32(undrawnColor));
-
-        int emuSpeed = (int)mChip8.GetEmuSpeedModifier();
-        ImGui::SliderInt("Emu Speed Modifier", &emuSpeed, 1, 10);
-        mChip8.SetEmuSpeedModifier((uint8_t)emuSpeed);
-
-        ImGui::Separator();
-
-        ImGui::Text("Quirk Flags");
-
-        bool useVYShiftQuirk = mChip8.GetUseVYForShiftQuirk();
-        ImGui::Checkbox("Use VY For Shift", &useVYShiftQuirk);
-        mChip8.SetUseVYForShiftQuirk(useVYShiftQuirk);
-
-        bool useBXNN = mChip8.GetUseBXNNQuirk();
-        ImGui::Checkbox("Use BXNN", &useBXNN);
-        mChip8.SetUseBXNNQuirk(useBXNN);
-
-        bool useIndexIncrement = mChip8.GetUseIndexIncrementAfterStoreLoadQuirk();
-        ImGui::Checkbox("Use Index Increment After Store and Load Memory", &useIndexIncrement);
-        mChip8.SetUseIndexIncrementAfterStoreLoadQuirk(useIndexIncrement);
-
-        ImGui::Separator();
-
-        ImGui::Text("Opcode: %X", mChip8.GetOpcode());
-        ImGui::Text("Index Reg: %X", mChip8.GetIndexReg());
-        ImGui::Text("Program Counter: %X", mChip8.GetProgramCounter());
-        ImGui::Text("Stack Pointer: %d", mChip8.GetStackPointer());
-        ImGui::Text("Delay Timer: %d", mChip8.GetDelayTimer());
-        ImGui::Text("Sound Timer: %d", mChip8.GetSoundTimer());
-
-        ImGui::Separator();
-
-        const auto vreg = mChip8.GetVReg();
-        for (size_t i = 0; i < std::size(vreg); ++i)
-            ImGui::Text("V%X: %d", i, vreg[i]);
-
-        ImGui::Separator();
-
-        const auto& keys = mChip8.GetKeys();
-        for (size_t i = 0; i < std::size(keys); ++i)
-            ImGui::Text("Key[%X] = %d", i, keys[i]);
-    }
-
-    ImGui::End();
 }
 
 void Application::LoadEmulatorSettings()
