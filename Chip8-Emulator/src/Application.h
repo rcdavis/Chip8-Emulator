@@ -53,6 +53,8 @@ private:
 
     void AddOpcodeLogLine(const std::string& line);
 
+    void ExitGame();
+
 private:
     enum class Theme
     {

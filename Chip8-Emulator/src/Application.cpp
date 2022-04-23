@@ -481,6 +481,10 @@ void Application::ImGuiMainMenuRender()
                 ImGui::EndMenu();
             }
 
+            ImGui::Separator();
+            if (ImGui::MenuItem("Exit Game", nullptr, nullptr, !std::empty(mChip8.GetGameFile())))
+                ExitGame();
+
             ImGui::EndMenu();
         }
 
@@ -599,4 +603,13 @@ void Application::AddOpcodeLogLine(const std::string& line)
 {
     if (mOpcodeLogPanel.IsOpen())
         mOpcodeLogPanel.AddLine(line);
+}
+
+void Application::ExitGame()
+{
+    mChip8.CloseGame();
+
+    mFrameBuffer.Bind();
+    glClear(GL_COLOR_BUFFER_BIT);
+    mFrameBuffer.Unbind();
 }

@@ -93,6 +93,8 @@ public:
     bool GetUseIndexIncrementAfterStoreLoadQuirk() const { return mUseIndexIncrementAfterStoreLoadQuirk; }
     void SetUseIndexIncrementAfterStoreLoadQuirk(const bool b) { mUseIndexIncrementAfterStoreLoadQuirk = b; }
 
+    void CloseGame();
+
 private:
     void Init();
 

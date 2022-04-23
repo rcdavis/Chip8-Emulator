@@ -775,3 +775,10 @@ void Chip8::ChangeGraphicsMode(const GraphicsMode mode)
     break;
     }
 }
+
+void Chip8::CloseGame()
+{
+    Init();
+
+    mGameFile = "";
+}
