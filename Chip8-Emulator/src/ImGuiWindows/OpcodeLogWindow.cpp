@@ -1,9 +1,11 @@
 #include "OpcodeLogWindow.h"
 
 #include "Utils/FileUtils.h"
-#include "Utils/PlatformUtils.h"
 
 #include <imgui.h>
+#include <ImGuiFileDialog.h>
+
+constexpr char* SaveLogFileDialogKey = "SaveLogFile";
 
 OpcodeLogWindow::OpcodeLogWindow(bool isOpen) :
     ImGuiWindow("Opcode Log", "opcodesLogOpen", isOpen)
@@ -21,14 +23,20 @@ void OpcodeLogWindow::OnRender()
     for (const auto& line : mLines)
         ImGui::Text(line.c_str());
     ImGui::EndChild();
+
+    if (ImGuiFileDialog::Instance()->Display(SaveLogFileDialogKey, ImGuiWindowFlags_NoCollapse, ImVec2(600.0f, 400.0f)))
+    {
+        if (ImGuiFileDialog::Instance()->IsOk())
+        {
+            const std::filesystem::path file = ImGuiFileDialog::Instance()->GetFilePathName();
+            FileUtils::WriteLines(file, mLines);
+        }
+
+        ImGuiFileDialog::Instance()->Close();
+    }
 }
 
 void OpcodeLogWindow::SaveLogToFile()
 {
-    constexpr char* DialogFilter = "Log File (*.log)\0*.log\0\0";
-    auto filepath = FileDialogs::SaveFile(mWindow, DialogFilter);
-    if (!filepath)
-        return;
-
-    FileUtils::WriteLines(*filepath, mLines);
+    ImGuiFileDialog::Instance()->OpenDialog(SaveLogFileDialogKey, "Save Log", "Log (*.log){.log}", "Resources");
 }

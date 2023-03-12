@@ -1,7 +1,6 @@
 #include "Application.h"
 
 #include "Log.h"
-#include "Utils/PlatformUtils.h"
 #include "Utils/FileUtils.h"
 #include "ImGuiWindows/Chip8InfoWindow.h"
 #include "ImGuiWindows/OpcodeLogWindow.h"
