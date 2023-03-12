@@ -42,6 +42,7 @@ private:
     void ImGuiRender();
 
     void ImGuiMainMenuRender();
+    void RenderDialogs();
 
     void UpdateInput(std::array<uint8_t, 16>& keys);
     void DrawChip8(const std::vector<uint32_t>& vram);
@@ -84,5 +85,4 @@ private:
 
     bool mImGuiInitialized = false;
     bool mIsMetricsWindowOpen = true;
-    bool mIsChip8InfoWindowOpen = true;
 };

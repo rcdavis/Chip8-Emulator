@@ -11,11 +11,12 @@
 
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
+#include <ImGuiFileDialog.h>
 
 #include <fstream>
 #include <array>
 
-constexpr char* DialogFilter = "Chip8 Game (*.c8, *.ch8)\0*.c8;*.ch8\0\0";
+constexpr char* LoadGameFileDialogKey = "LoadGame";
 
 struct Vertex
 {
@@ -239,7 +240,7 @@ void Application::KeyCallback(int key, int scancode, int action, int mods)
 
 void Application::ErrorCallback(int error, const char* description)
 {
-    LOG_ERROR("GLFW ERROR {}: {}", error, description);
+    LOG_ERROR("GLFW ERROR ({0}): {1}", error, description);
 }
 
 void Application::InitVertexBuffer()
@@ -391,8 +392,8 @@ void Application::ImGuiRender()
     auto viewportOffset = ImGui::GetWindowPos();
     const ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
 
-    const uint32_t texId = mFrameBuffer.GetColorAttachmentRendererId();
-    ImGui::Image((ImTextureID)texId, viewportPanelSize, ImVec2{ 0.0f, 1.0f }, ImVec2{ 1.0f, 0.0f });
+    const ImTextureID texId = (ImTextureID)(uint64_t)mFrameBuffer.GetColorAttachmentRendererId();
+    ImGui::Image(texId, viewportPanelSize, ImVec2{ 0.0f, 1.0f }, ImVec2{ 1.0f, 0.0f });
 
     ImGui::End();
     ImGui::PopStyleVar();
@@ -409,8 +410,7 @@ void Application::ImGuiRender()
     for (auto& imGuiWin : mImGuiWindows)
         imGuiWin->Render();
 
-    static bool demoOpen = true;
-    ImGui::ShowDemoWindow(&demoOpen);
+    RenderDialogs();
 
     ImGui::End();
 }
@@ -532,11 +532,23 @@ void Application::ImGuiMainMenuRender()
     }
 }
 
+void Application::RenderDialogs()
+{
+    if (ImGuiFileDialog::Instance()->Display(LoadGameFileDialogKey, ImGuiWindowFlags_NoCollapse, ImVec2(600.0f, 400.0f)))
+    {
+        if (ImGuiFileDialog::Instance()->IsOk())
+        {
+            const std::filesystem::path file = ImGuiFileDialog::Instance()->GetFilePathName();
+            mChip8.LoadGame(file);
+        }
+
+        ImGuiFileDialog::Instance()->Close();
+    }
+}
+
 void Application::LoadGame()
 {
-    auto filepath = FileDialogs::OpenFile(mWindow, DialogFilter);
-    if (filepath)
-        mChip8.LoadGame(*filepath);
+    ImGuiFileDialog::Instance()->OpenDialog(LoadGameFileDialogKey, "Load Game", "Chip8 Games (*.c8 *.ch8){.c8,.ch8}", "Resources/Games");
 }
 
 void Application::LoadEmulatorSettings()

@@ -30,6 +30,10 @@ project "Chip8-Emulator"
 
     defines { "GLFW_INCLUDE_NONE" }
 
+    filter "system:windows"
+		systemversion "latest"
+		staticruntime "On"
+
     filter { "configurations:Debug" }
         symbols "On"
         defines {
