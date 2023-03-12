@@ -1,17 +1,16 @@
-#include "OpcodeLogPanel.h"
+#include "OpcodeLogWindow.h"
 
 #include "Utils/FileUtils.h"
 #include "Utils/PlatformUtils.h"
 
 #include <imgui.h>
 
-void OpcodeLogPanel::Render()
+OpcodeLogWindow::OpcodeLogWindow(bool isOpen) :
+    ImGuiWindow("Opcode Log", "opcodesLogOpen", isOpen)
+{}
+
+void OpcodeLogWindow::OnRender()
 {
-    if (!mIsOpen)
-        return;
-
-    ImGui::Begin("Opcode Log", &mIsOpen);
-
     if (ImGui::Button("Clear"))
         mLines.clear();
     ImGui::SameLine();
@@ -22,11 +21,9 @@ void OpcodeLogPanel::Render()
     for (const auto& line : mLines)
         ImGui::Text(line.c_str());
     ImGui::EndChild();
-
-    ImGui::End();
 }
 
-void OpcodeLogPanel::SaveLogToFile()
+void OpcodeLogWindow::SaveLogToFile()
 {
     constexpr char* DialogFilter = "Log File (*.log)\0*.log\0\0";
     auto filepath = FileDialogs::SaveFile(mWindow, DialogFilter);

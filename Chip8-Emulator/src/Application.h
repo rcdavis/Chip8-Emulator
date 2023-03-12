@@ -1,11 +1,10 @@
 #pragma once
 
 #include "Chip8.h"
+#include "Types.h"
 #include "OpenGL/OpenGLShader.h"
 #include "OpenGL/OpenGLFramebuffer.h"
 #include "OpenGL/OpenGLTexture.h"
-#include "Panels/OpcodeLogPanel.h"
-#include "Panels/Chip8InfoPanel.h"
 
 #include <imgui.h>
 #include <imgui_memory_editor.h>
@@ -15,6 +14,7 @@
 #include <filesystem>
 
 struct GLFWwindow;
+class ImGuiWindow;
 
 class Application
 {
@@ -55,6 +55,9 @@ private:
 
     void ExitGame();
 
+    template <typename T>
+    Ref<T> GetImGuiWindow();
+
 private:
     enum class Theme
     {
@@ -72,8 +75,7 @@ private:
     OpenGLFramebuffer mFrameBuffer;
     OpenGLTexture mTexture;
 
-    OpcodeLogPanel mOpcodeLogPanel;
-    Chip8InfoPanel mChip8InfoPanel;
+    std::vector<Ref<ImGuiWindow>> mImGuiWindows;
 
     MemoryEditor mMemoryEditor;
     MemoryEditor mVramEditor;
