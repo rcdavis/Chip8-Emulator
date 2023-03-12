@@ -4,6 +4,7 @@
 
 #include <array>
 #include <vector>
+#include <string>
 #include <filesystem>
 #include <functional>
 
@@ -26,6 +27,7 @@ public:
     Chip8();
 
     void LoadGame(const std::filesystem::path& game);
+    std::string Disassemble();
 
     void Emulate();
 
@@ -99,6 +101,8 @@ private:
     void Init();
 
     void EmulateCycle();
+
+    std::string DisassembleOpcode(const uint8_t* const buffer, uint16_t opcode);
 
 private:
     UpdateInputFunc mUpdateInputFunc;

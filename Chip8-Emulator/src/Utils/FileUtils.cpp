@@ -28,6 +28,18 @@ namespace FileUtils
         return text;
     }
 
+    void WriteText(const std::filesystem::path& filepath, const std::string& text)
+    {
+        std::ofstream file(filepath);
+        if (!file)
+        {
+            LOG_ERROR("Failed to open file at {}", filepath.string());
+            return;
+        }
+
+        file << text;
+    }
+
     void WriteLines(const std::filesystem::path& filepath, const std::vector<std::string>& lines)
     {
         std::ofstream file(filepath);

@@ -487,6 +487,13 @@ void Application::ImGuiMainMenuRender()
             }
 
             ImGui::Separator();
+            if (ImGui::MenuItem("Disassemble", nullptr, nullptr, !std::empty(mChip8.GetGameFile())))
+            {
+                auto text = mChip8.Disassemble();
+                FileUtils::WriteText("Resources/TestOpCodes.txt", text);
+            }
+
+            ImGui::Separator();
             if (ImGui::MenuItem("Exit Game", nullptr, nullptr, !std::empty(mChip8.GetGameFile())))
                 ExitGame();
 
