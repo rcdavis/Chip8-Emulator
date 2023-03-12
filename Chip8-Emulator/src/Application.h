@@ -3,6 +3,9 @@
 #include "Chip8.h"
 #include "OpenGL/OpenGLShader.h"
 #include "OpenGL/OpenGLFramebuffer.h"
+#include "OpenGL/OpenGLTexture.h"
+#include "Panels/OpcodeLogPanel.h"
+#include "Panels/Chip8InfoPanel.h"
 
 #include <imgui.h>
 #include <imgui_memory_editor.h>
@@ -31,7 +34,6 @@ private:
 
     void InitVertexBuffer();
     void InitIndexBuffer();
-    void InitTexture();
     void InitShader();
     void InitImGui();
 
@@ -42,14 +44,23 @@ private:
     void ImGuiMainMenuRender();
 
     void UpdateInput(std::array<uint8_t, 16>& keys);
-    void DrawChip8(std::array<uint32_t, Chip8::VRAM_SIZE>& vram);
+    void DrawChip8(const std::vector<uint32_t>& vram);
 
     void LoadGame();
 
-    void RenderChip8InfoPanel();
-
     void LoadEmulatorSettings();
     void SaveEmulatorSettings();
+
+    void AddOpcodeLogLine(const std::string& line);
+
+    void ExitGame();
+
+private:
+    enum class Theme
+    {
+        Light,
+        Dark
+    };
 
 private:
     Chip8 mChip8;
@@ -57,12 +68,17 @@ private:
     uint32_t mVAO = 0;
     uint32_t mVertexBuffer = 0;
     uint32_t mIndexBuffer = 0;
-    uint32_t mTexture = 0;
     OpenGLShader mShader;
     OpenGLFramebuffer mFrameBuffer;
+    OpenGLTexture mTexture;
+
+    OpcodeLogPanel mOpcodeLogPanel;
+    Chip8InfoPanel mChip8InfoPanel;
 
     MemoryEditor mMemoryEditor;
     MemoryEditor mVramEditor;
+
+    Theme mTheme = Theme::Dark;
 
     bool mImGuiInitialized = false;
     bool mIsMetricsWindowOpen = true;

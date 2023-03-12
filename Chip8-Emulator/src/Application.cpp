@@ -2,6 +2,7 @@
 
 #include "Log.h"
 #include "Utils/PlatformUtils.h"
+#include "Utils/FileUtils.h"
 
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
@@ -47,14 +48,14 @@ bool Application::Init()
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-    mFrameBuffer.Create(Chip8::SCREEN_WIDTH, Chip8::SCREEN_HEIGHT);
+    mFrameBuffer.Create(mChip8.GetScreenWidth(), mChip8.GetScreenHeight());
 
     glCreateVertexArrays(1, &mVAO);
     glBindVertexArray(mVAO);
 
     InitVertexBuffer();
     InitIndexBuffer();
-    InitTexture();
+    mTexture.Create(mChip8.GetScreenWidth(), mChip8.GetScreenHeight());
     InitShader();
     InitImGui();
 
@@ -70,16 +71,24 @@ bool Application::Init()
     });
 
     mMemoryEditor.Open = false;
+    mMemoryEditor.OptShowDataPreview = true;
+
     mVramEditor.Open = false;
+    mVramEditor.OptShowDataPreview = true;
 
     mChip8.SetUpdateInputFunc(std::bind(&Application::UpdateInput, this, std::placeholders::_1));
     mChip8.SetRenderFunc(std::bind(&Application::DrawChip8, this, std::placeholders::_1));
+    mChip8.SetOpcodeLogFunc(std::bind(&Application::AddOpcodeLogLine, this, std::placeholders::_1));
 
     mFrameBuffer.Bind();
     glClear(GL_COLOR_BUFFER_BIT);
     mFrameBuffer.Unbind();
 
+    mOpcodeLogPanel.SetWindow(mWindow);
+
     LoadEmulatorSettings();
+
+    mChip8InfoPanel.SetChip8(&mChip8);
 
     return true;
 }
@@ -99,11 +108,7 @@ void Application::Shutdown()
     mShader.Delete();
     mFrameBuffer.Destroy();
 
-    if (mTexture)
-    {
-        glDeleteTextures(1, &mTexture);
-        mTexture = 0;
-    }
+    mTexture.Destroy();
 
     if (mVertexBuffer)
     {
@@ -179,10 +184,49 @@ void Application::KeyCallback(int key, int scancode, int action, int mods)
     {
         if (key == GLFW_KEY_O && mods == GLFW_MOD_CONTROL)
             LoadGame();
+        else if (mods == GLFW_MOD_SHIFT)
+        {
+            if (key == GLFW_KEY_F1)
+                mChip8.SaveState(1);
+            else if (key == GLFW_KEY_F2)
+                mChip8.SaveState(2);
+            else if (key == GLFW_KEY_F3)
+                mChip8.SaveState(3);
+            else if (key == GLFW_KEY_F4)
+                mChip8.SaveState(4);
+            else if (key == GLFW_KEY_F5)
+                mChip8.SaveState(5);
+            else if (key == GLFW_KEY_F6)
+                mChip8.SaveState(6);
+            else if (key == GLFW_KEY_F7)
+                mChip8.SaveState(7);
+            else if (key == GLFW_KEY_F8)
+                mChip8.SaveState(8);
+            else if (key == GLFW_KEY_F9)
+                mChip8.SaveState(9);
+            else if (key == GLFW_KEY_F10)
+                mChip8.SaveState(10);
+        }
         else if (key == GLFW_KEY_F1)
-            mChip8.SaveState();
+            mChip8.LoadState(1);
         else if (key == GLFW_KEY_F2)
-            mChip8.LoadState();
+            mChip8.LoadState(2);
+        else if (key == GLFW_KEY_F3)
+            mChip8.LoadState(3);
+        else if (key == GLFW_KEY_F4)
+            mChip8.LoadState(4);
+        else if (key == GLFW_KEY_F5)
+            mChip8.LoadState(5);
+        else if (key == GLFW_KEY_F6)
+            mChip8.LoadState(6);
+        else if (key == GLFW_KEY_F7)
+            mChip8.LoadState(7);
+        else if (key == GLFW_KEY_F8)
+            mChip8.LoadState(8);
+        else if (key == GLFW_KEY_F9)
+            mChip8.LoadState(9);
+        else if (key == GLFW_KEY_F10)
+            mChip8.LoadState(10);
     }
 }
 
@@ -220,22 +264,9 @@ void Application::InitIndexBuffer()
         std::data(indices), GL_STATIC_DRAW);
 }
 
-void Application::InitTexture()
-{
-    glActiveTexture(GL_TEXTURE0);
-    glGenTextures(1, &mTexture);
-    glBindTexture(GL_TEXTURE_2D, mTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, Chip8::SCREEN_WIDTH, Chip8::SCREEN_HEIGHT,
-        0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-    glTextureParameteri(mTexture, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTextureParameteri(mTexture, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTextureParameteri(mTexture, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTextureParameteri(mTexture, GL_TEXTURE_WRAP_T, GL_REPEAT);
-}
-
 void Application::InitShader()
 {
-    constexpr char* vertexSrc = "#version 450 core\n"
+    constexpr char* vertexSrc = "#version 460 core\n"
         "layout(location = 0) in vec2 a_Position;\n"
         "layout(location = 1) in vec2 a_TexCoord;\n"
         "layout(location = 0) out vec2 v_TexCoord;\n"
@@ -244,7 +275,7 @@ void Application::InitShader()
         "gl_Position = vec4(a_Position, 0.0, 1.0);\n"
         "}";
 
-    constexpr char* fragmentSrc = "#version 450 core\n"
+    constexpr char* fragmentSrc = "#version 460 core\n"
         "layout(location = 0) in vec2 v_TexCoord;\n"
         "out vec4 color;\n"
         "layout(binding = 0) uniform sampler2D u_Texture;\n"
@@ -266,7 +297,10 @@ void Application::InitImGui()
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
-    ImGui::StyleColorsDark();
+    if (mTheme == Theme::Light)
+        ImGui::StyleColorsLight();
+    else
+        ImGui::StyleColorsDark();
 
     ImGuiStyle& style = ImGui::GetStyle();
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
@@ -276,7 +310,7 @@ void Application::InitImGui()
     }
 
     ImGui_ImplGlfw_InitForOpenGL(mWindow, true);
-    ImGui_ImplOpenGL3_Init("#version 450 core");
+    ImGui_ImplOpenGL3_Init("#version 460 core");
 
     mImGuiInitialized = true;
 }
@@ -365,19 +399,23 @@ void Application::ImGuiRender()
     if (mVramEditor.Open)
         mVramEditor.DrawWindow("VRAM", std::data(mChip8.GetVram()), std::size(mChip8.GetVram()));
 
-    RenderChip8InfoPanel();
+    mChip8InfoPanel.Render();
+
+    mOpcodeLogPanel.Render();
+
+    static bool demoOpen = true;
+    ImGui::ShowDemoWindow(&demoOpen);
 
     ImGui::End();
 }
 
-void Application::DrawChip8(std::array<uint32_t, Chip8::VRAM_SIZE>& vram)
+void Application::DrawChip8(const std::vector<uint32_t>& vram)
 {
     mFrameBuffer.Bind();
     glClear(GL_COLOR_BUFFER_BIT);
     glBindVertexArray(mVAO);
 
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, Chip8::SCREEN_WIDTH, Chip8::SCREEN_HEIGHT,
-        GL_RGBA, GL_UNSIGNED_BYTE, std::data(vram));
+    mTexture.Update(mChip8.GetScreenWidth(), mChip8.GetScreenHeight(), (const char*)std::data(vram));
 
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, nullptr);
     mFrameBuffer.Unbind();
@@ -392,10 +430,81 @@ void Application::ImGuiMainMenuRender()
             if (ImGui::MenuItem("Load Game", "Ctrl+O"))
                 LoadGame();
             ImGui::Separator();
-            if (ImGui::MenuItem("Save State", nullptr, nullptr, !std::empty(mChip8.GetGameFile())))
-                mChip8.SaveState();
-            if (ImGui::MenuItem("Load State", nullptr, nullptr, !std::empty(mChip8.GetGameFile())))
-                mChip8.LoadState();
+            if (ImGui::BeginMenu("Save State", !std::empty(mChip8.GetGameFile())))
+            {
+                if (ImGui::MenuItem("State 1", "Shift+F1"))
+                    mChip8.SaveState(1);
+                else if (ImGui::MenuItem("State 2", "Shift+F2"))
+                    mChip8.SaveState(2);
+                else if (ImGui::MenuItem("State 3", "Shift+F3"))
+                    mChip8.SaveState(3);
+                else if (ImGui::MenuItem("State 4", "Shift+F4"))
+                    mChip8.SaveState(4);
+                else if (ImGui::MenuItem("State 5", "Shift+F5"))
+                    mChip8.SaveState(5);
+                else if (ImGui::MenuItem("State 6", "Shift+F6"))
+                    mChip8.SaveState(6);
+                else if (ImGui::MenuItem("State 7", "Shift+F7"))
+                    mChip8.SaveState(7);
+                else if (ImGui::MenuItem("State 8", "Shift+F8"))
+                    mChip8.SaveState(8);
+                else if (ImGui::MenuItem("State 9", "Shift+F9"))
+                    mChip8.SaveState(9);
+                else if (ImGui::MenuItem("State 10", "Shift+F10"))
+                    mChip8.SaveState(10);
+
+                ImGui::EndMenu();
+            }
+            if (ImGui::BeginMenu("Load State", !std::empty(mChip8.GetGameFile())))
+            {
+                if (ImGui::MenuItem("State 1", "F1"))
+                    mChip8.LoadState(1);
+                else if (ImGui::MenuItem("State 2", "F2"))
+                    mChip8.LoadState(2);
+                else if (ImGui::MenuItem("State 3", "F3"))
+                    mChip8.LoadState(3);
+                else if (ImGui::MenuItem("State 4", "F4"))
+                    mChip8.LoadState(4);
+                else if (ImGui::MenuItem("State 5", "F5"))
+                    mChip8.LoadState(5);
+                else if (ImGui::MenuItem("State 6", "F6"))
+                    mChip8.LoadState(6);
+                else if (ImGui::MenuItem("State 7", "F7"))
+                    mChip8.LoadState(7);
+                else if (ImGui::MenuItem("State 8", "F8"))
+                    mChip8.LoadState(8);
+                else if (ImGui::MenuItem("State 9", "F9"))
+                    mChip8.LoadState(9);
+                else if (ImGui::MenuItem("State 10", "F10"))
+                    mChip8.LoadState(10);
+
+                ImGui::EndMenu();
+            }
+
+            ImGui::Separator();
+            if (ImGui::MenuItem("Exit Game", nullptr, nullptr, !std::empty(mChip8.GetGameFile())))
+                ExitGame();
+
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Edit"))
+        {
+            if (ImGui::BeginMenu("Theme"))
+            {
+                if (ImGui::MenuItem("Light"))
+                {
+                    mTheme = Theme::Light;
+                    ImGui::StyleColorsLight();
+                }
+                else if (ImGui::MenuItem("Dark"))
+                {
+                    mTheme = Theme::Dark;
+                    ImGui::StyleColorsDark();
+                }
+
+                ImGui::EndMenu();
+            }
 
             ImGui::EndMenu();
         }
@@ -406,6 +515,11 @@ void Application::ImGuiMainMenuRender()
             ImGui::MenuItem("Chip8 Info", nullptr, &mIsChip8InfoWindowOpen);
             ImGui::MenuItem("Memory", nullptr, &mMemoryEditor.Open);
             ImGui::MenuItem("VRAM", nullptr, &mVramEditor.Open);
+
+            bool isOpcodeLogOpen = mOpcodeLogPanel.IsOpen();
+            ImGui::MenuItem("Opcode Log", nullptr, &isOpcodeLogOpen);
+            mOpcodeLogPanel.Open(isOpcodeLogOpen);
+
             ImGui::EndMenu();
         }
 
@@ -420,56 +534,12 @@ void Application::LoadGame()
         mChip8.LoadGame(*filepath);
 }
 
-void Application::RenderChip8InfoPanel()
-{
-    if (!mIsChip8InfoWindowOpen)
-        return;
-
-    if (ImGui::Begin("Chip8 Info", &mIsChip8InfoWindowOpen))
-    {
-        ImVec4 drawnColor = ImGui::ColorConvertU32ToFloat4(mChip8.GetDrawnColor());
-        ImGui::ColorEdit4("Drawn", &drawnColor.x);
-        mChip8.SetDrawnColor(ImGui::ColorConvertFloat4ToU32(drawnColor));
-
-        ImVec4 undrawnColor = ImGui::ColorConvertU32ToFloat4(mChip8.GetUndrawnColor());
-        ImGui::ColorEdit4("Undrawn", &undrawnColor.x);
-        mChip8.SetUndrawnColor(ImGui::ColorConvertFloat4ToU32(undrawnColor));
-
-        int emuSpeed = (int)mChip8.GetEmuSpeedModifier();
-        ImGui::SliderInt("Emu Speed Modifier", &emuSpeed, 1, 10);
-        mChip8.SetEmuSpeedModifier((uint8_t)emuSpeed);
-
-        ImGui::Separator();
-
-        ImGui::Text("Opcode: %X", mChip8.GetOpcode());
-        ImGui::Text("Index Reg: %X", mChip8.GetIndexReg());
-        ImGui::Text("Program Counter: %X", mChip8.GetProgramCounter());
-        ImGui::Text("Stack Pointer: %d", mChip8.GetStackPointer());
-        ImGui::Text("Delay Timer: %d", mChip8.GetDelayTimer());
-        ImGui::Text("Sound Timer: %d", mChip8.GetSoundTimer());
-
-        ImGui::Separator();
-
-        const auto vreg = mChip8.GetVReg();
-        for (size_t i = 0; i < std::size(vreg); ++i)
-            ImGui::Text("V%X: %d", i, vreg[i]);
-
-        ImGui::Separator();
-
-        const auto& keys = mChip8.GetKeys();
-        for (size_t i = 0; i < std::size(keys); ++i)
-            ImGui::Text("Key[%X] = %d", i, keys[i]);
-    }
-
-    ImGui::End();
-}
-
 void Application::LoadEmulatorSettings()
 {
     std::ifstream file("emulator.ini");
     if (!file)
     {
-        LOG_ERROR("Failed to load emulator settings");
+        LOG_WARN("Failed to load emulator settings");
         return;
     }
 
@@ -490,12 +560,22 @@ void Application::LoadEmulatorSettings()
             mMemoryEditor.Open = (bool)std::stoi(value);
         else if (key == "vramWindowOpen")
             mVramEditor.Open = (bool)std::stoi(value);
+        else if (key == "opcodesLogOpen")
+            mOpcodeLogPanel.Open((bool)std::stoi(value));
         else if (key == "emuSpeedModifier")
             mChip8.SetEmuSpeedModifier((uint8_t)std::stoi(value));
         else if (key == "drawnColor")
             mChip8.SetDrawnColor((uint32_t)std::stoul(value));
         else if (key == "undrawnColor")
             mChip8.SetUndrawnColor((uint32_t)std::stoul(value));
+        else if (key == "theme")
+        {
+            mTheme = (Theme)std::stoul(value);
+            if (mTheme == Theme::Light)
+                ImGui::StyleColorsLight();
+            else
+                ImGui::StyleColorsDark();
+        }
     }
 }
 
@@ -508,11 +588,28 @@ void Application::SaveEmulatorSettings()
         return;
     }
 
+    file << "theme=" << (uint32_t)mTheme << '\n';
     file << "metricsWindowOpen=" << mIsMetricsWindowOpen << '\n';
     file << "chip8InfoWindowOpen=" << mIsChip8InfoWindowOpen << '\n';
     file << "memoryWindowOpen=" << mMemoryEditor.Open << '\n';
     file << "vramWindowOpen=" << mVramEditor.Open << '\n';
+    file << "opcodesLogOpen=" << mOpcodeLogPanel.IsOpen() << '\n';
     file << "emuSpeedModifier=" << (uint32_t)mChip8.GetEmuSpeedModifier() << '\n';
     file << "drawnColor=" << mChip8.GetDrawnColor() << '\n';
     file << "undrawnColor=" << mChip8.GetUndrawnColor() << '\n';
+}
+
+void Application::AddOpcodeLogLine(const std::string& line)
+{
+    if (mOpcodeLogPanel.IsOpen())
+        mOpcodeLogPanel.AddLine(line);
+}
+
+void Application::ExitGame()
+{
+    mChip8.CloseGame();
+
+    mFrameBuffer.Bind();
+    glClear(GL_COLOR_BUFFER_BIT);
+    mFrameBuffer.Unbind();
 }

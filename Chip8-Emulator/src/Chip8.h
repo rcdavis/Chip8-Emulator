@@ -3,19 +3,24 @@
 #include "Types.h"
 
 #include <array>
+#include <vector>
 #include <filesystem>
 #include <functional>
 
 class Chip8
 {
 public:
-    // TODO: Super Chip is 128x64
-    static constexpr uint16_t SCREEN_WIDTH = 64;
-    static constexpr uint16_t SCREEN_HEIGHT = 32;
-    static constexpr uint16_t VRAM_SIZE = SCREEN_WIDTH * SCREEN_HEIGHT;
+    static constexpr uint32_t MEM_SIZE = 64 * 1024;
 
     using UpdateInputFunc = std::function<void(std::array<uint8_t, 16>&)>;
-    using RenderFunc = std::function<void(std::array<uint32_t, VRAM_SIZE>&)>;
+    using RenderFunc = std::function<void(const std::vector<uint32_t>&)>;
+    using OpcodeLogFunc = std::function<void(const std::string&)>;
+
+    enum class GraphicsMode
+    {
+        e64x32,
+        e128x64
+    };
 
 public:
     Chip8();
@@ -30,17 +35,25 @@ public:
     uint32_t GetFrameRate() const { return mFrameRate; }
     void SetFrameRate(uint32_t fps) { mFrameRate = fps; }
 
-    void SetUpdateInputFunc(UpdateInputFunc func) { mUpdateInputFunc = func; }
-    void SetRenderFunc(RenderFunc func) { mRenderFunc = func; }
+    void SetUpdateInputFunc(const UpdateInputFunc& func) { mUpdateInputFunc = func; }
+    void SetRenderFunc(const RenderFunc& func) { mRenderFunc = func; }
+    void SetOpcodeLogFunc(const OpcodeLogFunc& func) { mOpcodeLogFunc = func; }
+
+    uint16_t GetScreenWidth() const;
+    uint16_t GetScreenHeight() const;
+
+    GraphicsMode GetGraphicsMode() const { return mGraphicsMode; }
+    void SetGraphicsMode(const GraphicsMode mode) { mGraphicsMode = mode; }
+    void ChangeGraphicsMode(const GraphicsMode mode);
 
     const std::filesystem::path& GetGameFile() const { return mGameFile; }
-    std::array<uint8_t, VRAM_SIZE>& GetVram() { return mVram; }
-    std::array<uint8_t, 4096>& GetMemory() { return mMemory; }
+    std::vector<uint8_t>& GetVram() { return mVram; }
+    std::array<uint8_t, MEM_SIZE>& GetMemory() { return mMemory; }
     std::array<uint8_t, 16> GetVReg() const { return mV; }
     std::array<uint8_t, 16>& GetKeys() { return mKeys; }
     std::array<uint16_t, 16> GetStack() const { return mStack; }
 
-    std::array<uint32_t, VRAM_SIZE> GetVramImage();
+    std::vector<uint32_t> GetVramImage();
 
     uint16_t GetOpcode() const { return (mMemory[mPC] << 8) | mMemory[mPC + 1]; }
     uint16_t GetIndexReg() const { return mIndexReg; }
@@ -71,6 +84,17 @@ public:
     uint32_t GetUndrawnColor() const { return mUndrawnColor; }
     void SetUndrawnColor(const uint32_t color) { mUndrawnColor = color; }
 
+    bool GetUseVYForShiftQuirk() const { return mUseVYForShiftQuirk; }
+    void SetUseVYForShiftQuirk(const bool b) { mUseVYForShiftQuirk = b; }
+
+    bool GetUseBXNNQuirk() const { return mUseBXNNQuirk; }
+    void SetUseBXNNQuirk(const bool b) { mUseBXNNQuirk = b; }
+
+    bool GetUseIndexIncrementAfterStoreLoadQuirk() const { return mUseIndexIncrementAfterStoreLoadQuirk; }
+    void SetUseIndexIncrementAfterStoreLoadQuirk(const bool b) { mUseIndexIncrementAfterStoreLoadQuirk = b; }
+
+    void CloseGame();
+
 private:
     void Init();
 
@@ -79,12 +103,14 @@ private:
 private:
     UpdateInputFunc mUpdateInputFunc;
     RenderFunc mRenderFunc;
+    OpcodeLogFunc mOpcodeLogFunc;
 
     std::filesystem::path mGameFile;
 
-    std::array<uint8_t, 4096> mMemory;
+    std::array<uint8_t, MEM_SIZE> mMemory;
     std::array<uint8_t, 16> mV;
-    std::array<uint8_t, VRAM_SIZE> mVram;
+    std::array<uint8_t, 8> mRpl;
+    std::vector<uint8_t> mVram;
 
     uint16_t mOpcode;
     uint16_t mIndexReg;
@@ -101,9 +127,15 @@ private:
 
     bool mRedraw;
 
+    bool mUseVYForShiftQuirk = false;
+    bool mUseBXNNQuirk = false;
+    bool mUseIndexIncrementAfterStoreLoadQuirk = false;
+
     uint32_t mFrameRate;
 
     // Colors for monochrome screen
     uint32_t mDrawnColor = 0xFFFFFFFF; // White
     uint32_t mUndrawnColor = 0xFF000000; // Black
+
+    GraphicsMode mGraphicsMode = GraphicsMode::e64x32;
 };
