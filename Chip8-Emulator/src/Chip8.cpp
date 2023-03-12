@@ -800,6 +800,7 @@ std::string Chip8::DisassembleOpcode(const uint8_t* const buffer, uint16_t pc)
 {
     const uint16_t opcode = (buffer[pc] << 8) | buffer[pc + 1];
 
+    char text[32] = {};
     switch (opcode & 0xF000)
     {
     case 0x0000:
@@ -831,7 +832,6 @@ std::string Chip8::DisassembleOpcode(const uint8_t* const buffer, uint16_t pc)
         // 0x00CN Scroll the display down by 0 to 15 pixels
         if ((opcode & 0x00F0) == 0x00C0)
         {
-            char text[16] = {};
             snprintf(text, sizeof(text), "0x%04X SCD", opcode);
             return text;
         }
@@ -840,49 +840,42 @@ std::string Chip8::DisassembleOpcode(const uint8_t* const buffer, uint16_t pc)
 
     case 0x1000: // 0x1NNN Jump to address NNN
     {
-        char text[16] = {};
         snprintf(text, sizeof(text), "0x%04X JP", opcode);
         return text;
     }
 
     case 0x2000: // 0x2NNN Calls subroutine at NNN
     {
-        char text[16] = {};
         snprintf(text, sizeof(text), "0x%04X CALL", opcode);
         return text;
     }
 
     case 0x3000: // 0x3XNN Skips next instruction if VX equals NN
     {
-        char text[16] = {};
         snprintf(text, sizeof(text), "0x%04X SE", opcode);
         return text;
     }
 
     case 0x4000: // 0x4XNN Skips next instruction if VX does not equal NN
     {
-        char text[16] = {};
         snprintf(text, sizeof(text), "0x%04X SNE", opcode);
         return text;
     }
 
     case 0x5000: // 0x5XY0 Skips next instruction if VX equals VY
     {
-        char text[16] = {};
         snprintf(text, sizeof(text), "0x%04X SE", opcode);
         return text;
     }
 
     case 0x6000: // 0x6XNN Sets VX to NN
     {
-        char text[16] = {};
         snprintf(text, sizeof(text), "0x%04X LD", opcode);
         return text;
     }
 
     case 0x7000: // 0x7XNN Adds NN to VX (Carry flag is not changed)
     {
-        char text[16] = {};
         snprintf(text, sizeof(text), "0x%04X ADD", opcode);
         return text;
     }
@@ -893,63 +886,54 @@ std::string Chip8::DisassembleOpcode(const uint8_t* const buffer, uint16_t pc)
         {
         case 0x0000: // 0x8XY0 Set VX to VY
         {
-            char text[16] = {};
             snprintf(text, sizeof(text), "0x%04X LD", opcode);
             return text;
         }
 
         case 0x0001: // 0x8XY1 Set VX to VX or VY
         {
-            char text[16] = {};
             snprintf(text, sizeof(text), "0x%04X OR", opcode);
             return text;
         }
 
         case 0x0002: // 0x8XY2 Set VX to VX and VY
         {
-            char text[16] = {};
             snprintf(text, sizeof(text), "0x%04X AND", opcode);
             return text;
         }
 
         case 0x0003: // 0x8XY3 Set VX to VX xor VY
         {
-            char text[16] = {};
             snprintf(text, sizeof(text), "0x%04X XOR", opcode);
             return text;
         }
 
         case 0x0004: // 0x8XY4 Adds VY to VX. VF is set when there's a carry
         {
-            char text[16] = {};
             snprintf(text, sizeof(text), "0x%04X ADD", opcode);
             return text;
         }
 
         case 0x0005: // 0x8XY5 VY is subtracted from VX. VF is set to 0 if borrow
         {
-            char text[16] = {};
             snprintf(text, sizeof(text), "0x%04X SUB", opcode);
             return text;
         }
 
         case 0x0006: // 0x8XY6 Stores the least significant bit of VX in VF and then shifts VX to the right by 1.
         {
-            char text[16] = {};
             snprintf(text, sizeof(text), "0x%04X SHR", opcode);
             return text;
         }
 
         case 0x0007: // 0x8XY7 Sets VX to VY minus VX. VF is set to 0 when there's a borrow, and 1 when there isn't.
         {
-            char text[16] = {};
             snprintf(text, sizeof(text), "0x%04X SUBN", opcode);
             return text;
         }
 
         case 0x000E: // 0x8XYE Stores the most significant bit of VX in VF and then shifts VX to the left by 1.
         {
-            char text[16] = {};
             snprintf(text, sizeof(text), "0x%04X SHL", opcode);
             return text;
         }
@@ -959,28 +943,24 @@ std::string Chip8::DisassembleOpcode(const uint8_t* const buffer, uint16_t pc)
 
     case 0x9000: // 0x9XY0 Skips the next instruction if VX does not equal VY
     {
-        char text[16] = {};
         snprintf(text, sizeof(text), "0x%04X SNE", opcode);
         return text;
     }
 
     case 0xA000: // 0xANNN Sets I to the address NNN
     {
-        char text[16] = {};
         snprintf(text, sizeof(text), "0x%04X LD", opcode);
         return text;
     }
 
     case 0xB000: // 0xBNNN Jumps to the address NNN plus V0
     {
-        char text[16] = {};
         snprintf(text, sizeof(text), "0x%04X JP", opcode);
         return text;
     }
 
     case 0xC000: // 0xCXNN Sets VX to the result of bitwise and op on a random number and NN
     {
-        char text[16] = {};
         snprintf(text, sizeof(text), "0x%04X RND", opcode);
         return text;
     }
@@ -994,7 +974,6 @@ std::string Chip8::DisassembleOpcode(const uint8_t* const buffer, uint16_t pc)
      */
     case 0xD000:
     {
-        char text[16] = {};
         snprintf(text, sizeof(text), "0x%04X DRW", opcode);
         return text;
     }
@@ -1005,14 +984,12 @@ std::string Chip8::DisassembleOpcode(const uint8_t* const buffer, uint16_t pc)
         {
         case 0x009E: // 0xEX9E Skips the next instruction if the key stored in VX is pressed.
         {
-            char text[16] = {};
             snprintf(text, sizeof(text), "0x%04X SKP", opcode);
             return text;
         }
 
         case 0x00A1: // 0xEXA1 Skips the next instruction if the key stored in VX is not pressed.
         {
-            char text[16] = {};
             snprintf(text, sizeof(text), "0x%04X SKNP", opcode);
             return text;
         }
@@ -1026,7 +1003,6 @@ std::string Chip8::DisassembleOpcode(const uint8_t* const buffer, uint16_t pc)
         {
         case 0x0007: // 0xFX07 Sets VX to the value of the delay timer.
         {
-            char text[16] = {};
             snprintf(text, sizeof(text), "0x%04X LD", opcode);
             return text;
         }
@@ -1037,42 +1013,36 @@ std::string Chip8::DisassembleOpcode(const uint8_t* const buffer, uint16_t pc)
             */
         case 0x000A:
         {
-            char text[16] = {};
             snprintf(text, sizeof(text), "0x%04X LD", opcode);
             return text;
         }
 
         case 0x0015: // 0xFX15 Sets delay timer to VX.
         {
-            char text[16] = {};
             snprintf(text, sizeof(text), "0x%04X LD", opcode);
             return text;
         }
 
         case 0x0018: // 0xFX18 Sets sound timer to VX.
         {
-            char text[16] = {};
             snprintf(text, sizeof(text), "0x%04X LD", opcode);
             return text;
         }
 
         case 0x001E: // 0xFX1E Adds VX to I
         {
-            char text[16] = {};
             snprintf(text, sizeof(text), "0x%04X ADD", opcode);
             return text;
         }
 
         case 0x0029: // 0xFX29 Sets I to the location of the sprite for the character in VX. Characters 0-F (in hexadecimal) are represented by a 4x5 font.
         {
-            char text[16] = {};
             snprintf(text, sizeof(text), "0x%04X LD", opcode);
             return text;
         }
 
         case 0x0030: // 0xFX30 Set I to a large hex character based on the value of VX.
         {
-            char text[16] = {};
             snprintf(text, sizeof(text), "0x%04X LD", opcode);
             return text;
         }
@@ -1087,35 +1057,30 @@ std::string Chip8::DisassembleOpcode(const uint8_t* const buffer, uint16_t pc)
              */
         case 0x0033:
         {
-            char text[16] = {};
             snprintf(text, sizeof(text), "0x%04X LD", opcode);
             return text;
         }
 
         case 0x0055: // 0xFX55 Stores V0 to VX (including VX) in memory starting at address I
         {
-            char text[16] = {};
             snprintf(text, sizeof(text), "0x%04X LD", opcode);
             return text;
         }
 
         case 0x0065: // 0xFX65 Fills V0 to VX (including VX) with values from memory starting at address I
         {
-            char text[16] = {};
             snprintf(text, sizeof(text), "0x%04X LD", opcode);
             return text;
         }
 
         case 0x0075: // 0xFX75 Save V0-VX to flag registers
         {
-            char text[16] = {};
             snprintf(text, sizeof(text), "0x%04X LD", opcode);
             return text;
         }
 
         case 0x0085: // 0xFX85 Restore V0-VX from flag registers
         {
-            char text[16] = {};
             snprintf(text, sizeof(text), "0x%04X LD", opcode);
             return text;
         }
@@ -1124,9 +1089,6 @@ std::string Chip8::DisassembleOpcode(const uint8_t* const buffer, uint16_t pc)
     break;
     }
 
-    char text[16] = {};
     snprintf(text, sizeof(text), "0x%04X UNKNOWN", opcode);
     return text;
-
-    //return {};
 }
