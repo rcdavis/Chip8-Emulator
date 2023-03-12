@@ -13,11 +13,11 @@ void Chip8InfoPanel::Render()
     if (ImGui::Begin("Chip8 Info", &mIsOpen))
     {
         ImVec4 drawnColor = ImGui::ColorConvertU32ToFloat4(mChip8->GetDrawnColor());
-        ImGui::ColorEdit4("Drawn", &drawnColor.x);
+        ImGui::ColorEdit3("Drawn", &drawnColor.x);
         mChip8->SetDrawnColor(ImGui::ColorConvertFloat4ToU32(drawnColor));
 
         ImVec4 undrawnColor = ImGui::ColorConvertU32ToFloat4(mChip8->GetUndrawnColor());
-        ImGui::ColorEdit4("Undrawn", &undrawnColor.x);
+        ImGui::ColorEdit3("Undrawn", &undrawnColor.x);
         mChip8->SetUndrawnColor(ImGui::ColorConvertFloat4ToU32(undrawnColor));
 
         int emuSpeed = (int)mChip8->GetEmuSpeedModifier();

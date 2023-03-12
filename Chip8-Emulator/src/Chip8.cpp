@@ -24,16 +24,7 @@ void Chip8::Init()
     mStack.fill(0);
     mKeys.fill(0);
 
-    switch (mGraphicsMode)
-    {
-    case Chip8::GraphicsMode::e64x32:
-        mVram.resize(64 * 32);
-        break;
-
-    case Chip8::GraphicsMode::e128x64:
-        mVram.resize(128 * 64);
-        break;
-    }
+    mVram.resize(GetScreenWidth() * GetScreenHeight());
     memset(std::data(mVram), 0, std::size(mVram));
 
     mOpcode = 0;
