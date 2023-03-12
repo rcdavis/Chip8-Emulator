@@ -1,19 +1,21 @@
 #include "Application.h"
 
 #include "Log.h"
-#include "Utils/PlatformUtils.h"
 #include "Utils/FileUtils.h"
+#include "ImGuiWindows/Chip8InfoWindow.h"
+#include "ImGuiWindows/OpcodeLogWindow.h"
 
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
+#include <ImGuiFileDialog.h>
 
 #include <fstream>
 #include <array>
 
-constexpr char* DialogFilter = "Chip8 Game (*.c8, *.ch8)\0*.c8;*.ch8\0\0";
+constexpr char* LoadGameFileDialogKey = "LoadGame";
 
 struct Vertex
 {
@@ -84,11 +86,16 @@ bool Application::Init()
     glClear(GL_COLOR_BUFFER_BIT);
     mFrameBuffer.Unbind();
 
-    mOpcodeLogPanel.SetWindow(mWindow);
+    mImGuiWindows.clear();
+    auto opcodeLogWin = CreateRef<OpcodeLogWindow>();
+    opcodeLogWin->SetWindow(mWindow);
+    mImGuiWindows.push_back(opcodeLogWin);
+
+    auto chip8InfoWin = CreateRef<Chip8InfoWindow>();
+    chip8InfoWin->SetChip8(&mChip8);
+    mImGuiWindows.push_back(chip8InfoWin);
 
     LoadEmulatorSettings();
-
-    mChip8InfoPanel.SetChip8(&mChip8);
 
     return true;
 }
@@ -232,7 +239,7 @@ void Application::KeyCallback(int key, int scancode, int action, int mods)
 
 void Application::ErrorCallback(int error, const char* description)
 {
-    LOG_ERROR("GLFW ERROR {}: {}", error, description);
+    LOG_ERROR("GLFW ERROR ({0}): {1}", error, description);
 }
 
 void Application::InitVertexBuffer()
@@ -344,11 +351,11 @@ void Application::ImGuiEndFrame()
 void Application::ImGuiRender()
 {
     static bool dockspaceOpen = true;
-    static bool optFullscreen = true;
-    static ImGuiDockNodeFlags dockspaceFlags = ImGuiDockNodeFlags_None;
+    static constexpr bool optFullscreen = true;
+    static constexpr ImGuiDockNodeFlags dockspaceFlags = ImGuiDockNodeFlags_None;
     ImGuiWindowFlags windowFlags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
 
-    if (optFullscreen)
+    if constexpr (optFullscreen)
     {
         ImGuiViewport* viewport = ImGui::GetMainViewport();
         ImGui::SetNextWindowPos(viewport->Pos);
@@ -360,14 +367,14 @@ void Application::ImGuiRender()
         windowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
     }
 
-    if (dockspaceFlags & ImGuiDockNodeFlags_PassthruCentralNode)
+    if constexpr (dockspaceFlags & ImGuiDockNodeFlags_PassthruCentralNode)
         windowFlags |= ImGuiWindowFlags_NoBackground;
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
     ImGui::Begin("DockSpace Demo", &dockspaceOpen, windowFlags);
     ImGui::PopStyleVar();
 
-    if (optFullscreen)
+    if constexpr (optFullscreen)
         ImGui::PopStyleVar(2);
 
     ImGuiIO& io = ImGui::GetIO();
@@ -384,8 +391,8 @@ void Application::ImGuiRender()
     auto viewportOffset = ImGui::GetWindowPos();
     const ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
 
-    const uint32_t texId = mFrameBuffer.GetColorAttachmentRendererId();
-    ImGui::Image((ImTextureID)texId, viewportPanelSize, ImVec2{ 0.0f, 1.0f }, ImVec2{ 1.0f, 0.0f });
+    const ImTextureID texId = (ImTextureID)(uint64_t)mFrameBuffer.GetColorAttachmentRendererId();
+    ImGui::Image(texId, viewportPanelSize, ImVec2{ 0.0f, 1.0f }, ImVec2{ 1.0f, 0.0f });
 
     ImGui::End();
     ImGui::PopStyleVar();
@@ -399,12 +406,10 @@ void Application::ImGuiRender()
     if (mVramEditor.Open)
         mVramEditor.DrawWindow("VRAM", std::data(mChip8.GetVram()), std::size(mChip8.GetVram()));
 
-    mChip8InfoPanel.Render();
+    for (auto& imGuiWin : mImGuiWindows)
+        imGuiWin->Render();
 
-    mOpcodeLogPanel.Render();
-
-    static bool demoOpen = true;
-    ImGui::ShowDemoWindow(&demoOpen);
+    RenderDialogs();
 
     ImGui::End();
 }
@@ -512,13 +517,12 @@ void Application::ImGuiMainMenuRender()
         if (ImGui::BeginMenu("Windows"))
         {
             ImGui::MenuItem("ImGui Metrics", nullptr, &mIsMetricsWindowOpen);
-            ImGui::MenuItem("Chip8 Info", nullptr, &mIsChip8InfoWindowOpen);
+
+            for (auto& imGuiWin : mImGuiWindows)
+                imGuiWin->RenderMenuItem();
+
             ImGui::MenuItem("Memory", nullptr, &mMemoryEditor.Open);
             ImGui::MenuItem("VRAM", nullptr, &mVramEditor.Open);
-
-            bool isOpcodeLogOpen = mOpcodeLogPanel.IsOpen();
-            ImGui::MenuItem("Opcode Log", nullptr, &isOpcodeLogOpen);
-            mOpcodeLogPanel.Open(isOpcodeLogOpen);
 
             ImGui::EndMenu();
         }
@@ -527,11 +531,23 @@ void Application::ImGuiMainMenuRender()
     }
 }
 
+void Application::RenderDialogs()
+{
+    if (ImGuiFileDialog::Instance()->Display(LoadGameFileDialogKey, ImGuiWindowFlags_NoCollapse, ImVec2(600.0f, 400.0f)))
+    {
+        if (ImGuiFileDialog::Instance()->IsOk())
+        {
+            const std::filesystem::path file = ImGuiFileDialog::Instance()->GetFilePathName();
+            mChip8.LoadGame(file);
+        }
+
+        ImGuiFileDialog::Instance()->Close();
+    }
+}
+
 void Application::LoadGame()
 {
-    auto filepath = FileDialogs::OpenFile(mWindow, DialogFilter);
-    if (filepath)
-        mChip8.LoadGame(*filepath);
+    ImGuiFileDialog::Instance()->OpenDialog(LoadGameFileDialogKey, "Load Game", "Chip8 Games (*.c8 *.ch8){.c8,.ch8}", "Resources/Games");
 }
 
 void Application::LoadEmulatorSettings()
@@ -554,14 +570,10 @@ void Application::LoadEmulatorSettings()
         const auto value = line.substr(index + 1);
         if (key == "metricsWindowOpen")
             mIsMetricsWindowOpen = (bool)std::stoi(value);
-        else if (key == "chip8InfoWindowOpen")
-            mIsChip8InfoWindowOpen = (bool)std::stoi(value);
         else if (key == "memoryWindowOpen")
             mMemoryEditor.Open = (bool)std::stoi(value);
         else if (key == "vramWindowOpen")
             mVramEditor.Open = (bool)std::stoi(value);
-        else if (key == "opcodesLogOpen")
-            mOpcodeLogPanel.Open((bool)std::stoi(value));
         else if (key == "emuSpeedModifier")
             mChip8.SetEmuSpeedModifier((uint8_t)std::stoi(value));
         else if (key == "drawnColor")
@@ -576,6 +588,14 @@ void Application::LoadEmulatorSettings()
             else
                 ImGui::StyleColorsDark();
         }
+        else
+        {
+            for (auto& win : mImGuiWindows)
+            {
+                if (key == win->GetSaveId())
+                    win->Open((bool)std::stoi(value));
+            }
+        }
     }
 }
 
@@ -588,21 +608,23 @@ void Application::SaveEmulatorSettings()
         return;
     }
 
-    file << "theme=" << (uint32_t)mTheme << '\n';
-    file << "metricsWindowOpen=" << mIsMetricsWindowOpen << '\n';
-    file << "chip8InfoWindowOpen=" << mIsChip8InfoWindowOpen << '\n';
-    file << "memoryWindowOpen=" << mMemoryEditor.Open << '\n';
-    file << "vramWindowOpen=" << mVramEditor.Open << '\n';
-    file << "opcodesLogOpen=" << mOpcodeLogPanel.IsOpen() << '\n';
-    file << "emuSpeedModifier=" << (uint32_t)mChip8.GetEmuSpeedModifier() << '\n';
-    file << "drawnColor=" << mChip8.GetDrawnColor() << '\n';
-    file << "undrawnColor=" << mChip8.GetUndrawnColor() << '\n';
+    file << "theme=" << (uint32_t)mTheme << std::endl;
+    file << "metricsWindowOpen=" << mIsMetricsWindowOpen << std::endl;
+    file << "memoryWindowOpen=" << mMemoryEditor.Open << std::endl;
+    file << "vramWindowOpen=" << mVramEditor.Open << std::endl;
+
+    for (auto& win : mImGuiWindows)
+        file << win->GetSaveId() << "=" << win->IsOpen() << std::endl;
+
+    file << "emuSpeedModifier=" << (uint32_t)mChip8.GetEmuSpeedModifier() << std::endl;
+    file << "drawnColor=" << mChip8.GetDrawnColor() << std::endl;
+    file << "undrawnColor=" << mChip8.GetUndrawnColor() << std::endl;
 }
 
 void Application::AddOpcodeLogLine(const std::string& line)
 {
-    if (mOpcodeLogPanel.IsOpen())
-        mOpcodeLogPanel.AddLine(line);
+    if (auto win = GetImGuiWindow<OpcodeLogWindow>(); win->IsOpen())
+        win->AddLine(line);
 }
 
 void Application::ExitGame()
@@ -612,4 +634,16 @@ void Application::ExitGame()
     mFrameBuffer.Bind();
     glClear(GL_COLOR_BUFFER_BIT);
     mFrameBuffer.Unbind();
+}
+
+template <typename T>
+Ref<T> Application::GetImGuiWindow()
+{
+    for (auto& imGuiWin : mImGuiWindows)
+    {
+        if (auto win = DynamicCastRef<T>(imGuiWin))
+            return win;
+    }
+
+    return nullptr;
 }

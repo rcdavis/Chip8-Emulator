@@ -1,24 +1,24 @@
 #pragma once
 
+#include "ImGuiWindow.h"
+
 #include <string>
 #include <vector>
 
 struct GLFWwindow;
 
-class OpcodeLogPanel
+class OpcodeLogWindow : public ImGuiWindow
 {
 public:
-    OpcodeLogPanel() = default;
-
-    void Render();
+    OpcodeLogWindow(bool isOpen = false);
 
     void AddLine(const std::string& line) { mLines.push_back(line); }
     void Clear() { mLines.clear(); }
 
-    bool IsOpen() const { return mIsOpen; }
-    void Open(const bool isOpen) { mIsOpen = isOpen; }
-
     void SetWindow(GLFWwindow* const window) { mWindow = window; }
+
+protected:
+    void OnRender() override;
 
 private:
     void SaveLogToFile();
@@ -26,5 +26,4 @@ private:
 private:
     std::vector<std::string> mLines;
     GLFWwindow* mWindow = nullptr;
-    bool mIsOpen = false;
 };
