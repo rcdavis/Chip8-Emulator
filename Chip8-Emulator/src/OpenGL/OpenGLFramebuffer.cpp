@@ -1,6 +1,6 @@
 #include "OpenGLFramebuffer.h"
 
-#include <glad/glad.h>
+#include <glad/gl.h>
 
 static constexpr uint32_t s_MaxFramebufferSize = 8192;
 

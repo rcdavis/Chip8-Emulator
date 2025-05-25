@@ -2,7 +2,7 @@
 
 #include "Log.h"
 
-#include <glad/glad.h>
+#include <glad/gl.h>
 #include <vector>
 
 OpenGLShader::OpenGLShader(const char* const vertexSrc, const char* const fragmentSrc)

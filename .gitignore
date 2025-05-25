@@ -31,8 +31,6 @@
 *.out
 *.app
 
-!vendor/Premake/premake5.exe
-
 # VS
 .vs/
 *.sln
@@ -46,6 +44,8 @@
 
 *.log
 *.tlog
+
+Makefile
 
 # Save State Files
 *.c8state

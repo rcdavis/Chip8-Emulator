@@ -5,8 +5,9 @@
 #include "ImGuiWindows/Chip8InfoWindow.h"
 #include "ImGuiWindows/OpcodeLogWindow.h"
 
+#define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
-#include <glad/glad.h>
+#include <glad/gl.h>
 
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
@@ -43,7 +44,7 @@ bool Application::Init()
         return false;
 
     glfwMakeContextCurrent(mWindow);
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    if (!gladLoadGL((GLADloadfunc)glfwGetProcAddress))
         return false;
 
     glfwSwapInterval(1);

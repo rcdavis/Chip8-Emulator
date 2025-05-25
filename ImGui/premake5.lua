@@ -16,8 +16,20 @@ project "ImGui"
 
 	includedirs {
         "src",
-        "%{IncludeDir.glfw}"
     }
+
+	filter { "platforms:Linux" }
+        includedirs {
+            "/usr/include"
+        }
+
+        libdirs {
+            "/usr/lib/x86_64-linux-gnu"
+        }
+
+        links {
+            "glfw"
+        }
 
 	filter "system:windows"
 		systemversion "latest"

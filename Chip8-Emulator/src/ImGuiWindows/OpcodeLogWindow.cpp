@@ -8,7 +8,7 @@
 constexpr char* SaveLogFileDialogKey = "SaveLogFile";
 
 OpcodeLogWindow::OpcodeLogWindow(bool isOpen) :
-    ImGuiWindow("Opcode Log", "opcodesLogOpen", isOpen)
+    BaseImGuiWindow("Opcode Log", "opcodesLogOpen", isOpen)
 {}
 
 void OpcodeLogWindow::OnRender()

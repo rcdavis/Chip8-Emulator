@@ -1,0 +1,23 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/Chip8-Emulator/src/",
+                "${workspaceFolder}/Chip8-Emulator/vendor/glad/src",
+                "${workspaceFolder}/Chip8-Emulator/vendor/Spdlog/src",
+                "${workspaceFolder}/ImGui/src/",
+                "/usr/include",
+                "/usr/include/c++/12/",
+                "/usr/include/x86_64-linux-gnu/c++/12",
+                "/usr/lib/gcc/x86_64-linux-gnu/12/include"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/clang++",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "linux-clang-x64"
+        }
+    ],
+    "version": 4
+}

@@ -7,15 +7,16 @@ outputObjDir = "Build/%{cfg.buildcfg}-%{cfg.platform}/Obj"
 workspace "Chip8-Emulator"
     startproject "Chip8-Emulator"
     configurations { "Debug", "Release", "Dist" }
-    platforms { "Win64" }
+    platforms { "Linux", "Win64" }
     flags { "MultiProcessorCompile" }
+    architecture "x86_64"
 
     filter { "platforms:Win64" }
         system "windows"
-        architecture "x86_64"
-
-    filter { "system:windows" }
         systemversion "latest"
+
+    filter { "platforms:Linux" }
+        system "linux"
 
 include "Chip8-Emulator"
 include "ImGui"

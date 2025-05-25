@@ -1,6 +1,6 @@
 #include "OpenGLTexture.h"
 
-#include <glad/glad.h>
+#include <glad/gl.h>
 
 OpenGLTexture::~OpenGLTexture()
 {

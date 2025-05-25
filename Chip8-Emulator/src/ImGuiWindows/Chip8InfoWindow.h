@@ -1,10 +1,10 @@
 #pragma once
 
-#include "ImGuiWindow.h"
+#include "BaseImGuiWindow.h"
 
 class Chip8;
 
-class Chip8InfoWindow : public ImGuiWindow
+class Chip8InfoWindow : public BaseImGuiWindow
 {
 public:
     Chip8InfoWindow(bool isOpen = false);

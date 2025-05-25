@@ -16,17 +16,27 @@ project "Chip8-Emulator"
     includedirs {
         "src",
         "%{IncludeDir.Spdlog}",
-        "%{IncludeDir.glfw}",
         "%{IncludeDir.glad}",
         "%{IncludeDir.imgui}"
     }
 
     links {
-        "%{Library.glfw}",
-        "%{Library.glad}",
-        "opengl32.lib",
+        "GL",
         "ImGui"
     }
+
+    filter { "platforms:Linux" }
+        includedirs {
+            "/usr/include"
+        }
+
+        libdirs {
+            "/usr/lib/x86_64-linux-gnu"
+        }
+
+        links {
+            "glfw"
+        }
 
     defines { "GLFW_INCLUDE_NONE" }
 
