@@ -12,7 +12,11 @@
                 "/usr/include/x86_64-linux-gnu/c++/12",
                 "/usr/lib/gcc/x86_64-linux-gnu/12/include"
             ],
-            "defines": [],
+            "defines": [
+                "GLFW_INCLUDE_NONE",
+                "LOGGING_ENABLED",
+                "ASSERTS_ENABLED"
+            ],
             "compilerPath": "/usr/bin/clang++",
             "cStandard": "c17",
             "cppStandard": "c++17",
