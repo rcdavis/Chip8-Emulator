@@ -21,7 +21,6 @@ project "Chip8-Emulator"
     }
 
     links {
-        "GL",
         "ImGui"
     }
 
@@ -35,7 +34,13 @@ project "Chip8-Emulator"
         }
 
         links {
+            "GL",
             "glfw"
+        }
+
+    filter { "platforms:Win64" }
+        links {
+            "opengl32"
         }
 
     defines { "GLFW_INCLUDE_NONE" }

@@ -44,8 +44,14 @@ bool Application::Init()
         return false;
 
     glfwMakeContextCurrent(mWindow);
-    if (!gladLoadGL((GLADloadfunc)glfwGetProcAddress))
+    const int version = gladLoadGL((GLADloadfunc)glfwGetProcAddress);
+    if (!version)
+    {
+        LOG_CRITICAL("Failed to init OpenGL context");
         return false;
+    }
+
+    LOG_INFO("Loaded OpenGL {0}.{1}", GLAD_VERSION_MAJOR(version), GLAD_VERSION_MINOR(version));
 
     glfwSwapInterval(1);
 
