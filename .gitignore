@@ -40,6 +40,8 @@
 *.vcxproj.user
 *.vcxproj.filters
 
+build/
+
 **/Build/
 **/Bin/
 **/Obj/
