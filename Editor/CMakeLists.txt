@@ -10,12 +10,24 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(glfw)
 
 add_executable(Editor
+    glad/src/gl.c
     src/Editor.cpp
     src/Main.cpp
 )
 
+target_compile_definitions(Editor PUBLIC
+    GLFW_INCLUDE_NONE
+)
+
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_compile_definitions(Editor PUBLIC
+        DEBUG
+    )
+endif()
+
 target_include_directories(Editor PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/glad/include
 )
 
 cmake_policy(SET CMP0072 NEW)
