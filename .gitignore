@@ -31,14 +31,14 @@
 *.out
 *.app
 
-!vendor/Premake/premake5.exe
-
 # VS
 .vs/
 *.sln
 *.vcxproj
 *.vcxproj.user
 *.vcxproj.filters
+
+build/
 
 **/Build/
 **/Bin/

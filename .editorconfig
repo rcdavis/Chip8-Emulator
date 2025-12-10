@@ -1,9 +1,15 @@
 root = true
 
 [*]
-trim_trailing_whitespace = true
 insert_final_newline = true
+trim_trailing_whitespace = true
 
-[*.{cpp,h}]
-indent_style = space
+[*.{c,cpp,h}]
+end_of_line = lf
+indent_style = tab
 indent_size = 4
+
+[*.json]
+end_of_line = lf
+indent_style = tab
+indent_size = 2
