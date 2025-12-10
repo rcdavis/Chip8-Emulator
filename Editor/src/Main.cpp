@@ -1,7 +1,12 @@
 
-#include <iostream>
+#include "Editor.h"
 
 int main(int argc, char** argv) {
-	std::cout << "Hello Chip8 Editor!\n";
+	Editor editor;
+	if (!editor.Init())
+		return -1;
+
+	editor.Run();
+
 	return 0;
 }
