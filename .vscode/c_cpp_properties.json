@@ -4,6 +4,8 @@
 		{
 			"name": "Linux (Debug)",
 			"includePath": [
+				"${workspaceFolder}/build/_deps/glfw-src/include",
+				"${workspaceFolder}/Editor/include",
 				"/usr/include",
 				"/usr/local/include"
 			],
