@@ -5,6 +5,7 @@
 			"name": "Linux (Debug)",
 			"includePath": [
 				"${workspaceFolder}/build/_deps/glfw-src/include",
+				"${workspaceFolder}/build/_deps/spdlog-src/include",
 				"${workspaceFolder}/Editor/include",
 				"${workspaceFolder}/Editor/glad/include",
 				"/usr/include",
