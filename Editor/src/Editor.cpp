@@ -73,7 +73,7 @@ bool Editor::Init(int argc, char** argv) {
 	glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
 
 	if (argc > 1) {
-		// TODO: Load game from CLI
+		mChip8.LoadGame(argv[1]);
 	}
 
 	return true;
@@ -83,7 +83,11 @@ void Editor::Run() {
 	while (!glfwWindowShouldClose(mWindow)) {
 		glfwPollEvents();
 
+		UpdateInput();
+
 		glClear(GL_COLOR_BUFFER_BIT);
+
+		mChip8.EmulateCycle();
 
 		if (mChip8.mShouldRedraw) {
 			// TODO: Render VRAM
@@ -96,8 +100,43 @@ void Editor::Run() {
 }
 
 void Editor::UpdateInput() {
-	// TODO: Update Chip8 keys
 	mChip8.mKeys.fill(0);
+
+	if (glfwGetKey(mWindow, GLFW_KEY_1) == GLFW_PRESS)
+		mChip8.mKeys[0] = 1;
+	if (glfwGetKey(mWindow, GLFW_KEY_2) == GLFW_PRESS)
+		mChip8.mKeys[1] = 1;
+	if (glfwGetKey(mWindow, GLFW_KEY_3) == GLFW_PRESS)
+		mChip8.mKeys[2] = 1;
+	if (glfwGetKey(mWindow, GLFW_KEY_4) == GLFW_PRESS)
+		mChip8.mKeys[3] = 1;
+
+	if (glfwGetKey(mWindow, GLFW_KEY_Q) == GLFW_PRESS)
+		mChip8.mKeys[4] = 1;
+	if (glfwGetKey(mWindow, GLFW_KEY_W) == GLFW_PRESS)
+		mChip8.mKeys[5] = 1;
+	if (glfwGetKey(mWindow, GLFW_KEY_E) == GLFW_PRESS)
+		mChip8.mKeys[6] = 1;
+	if (glfwGetKey(mWindow, GLFW_KEY_R) == GLFW_PRESS)
+		mChip8.mKeys[7] = 1;
+
+	if (glfwGetKey(mWindow, GLFW_KEY_A) == GLFW_PRESS)
+		mChip8.mKeys[8] = 1;
+	if (glfwGetKey(mWindow, GLFW_KEY_S) == GLFW_PRESS)
+		mChip8.mKeys[9] = 1;
+	if (glfwGetKey(mWindow, GLFW_KEY_D) == GLFW_PRESS)
+		mChip8.mKeys[10] = 1;
+	if (glfwGetKey(mWindow, GLFW_KEY_F) == GLFW_PRESS)
+		mChip8.mKeys[11] = 1;
+
+	if (glfwGetKey(mWindow, GLFW_KEY_Z) == GLFW_PRESS)
+		mChip8.mKeys[12] = 1;
+	if (glfwGetKey(mWindow, GLFW_KEY_X) == GLFW_PRESS)
+		mChip8.mKeys[13] = 1;
+	if (glfwGetKey(mWindow, GLFW_KEY_C) == GLFW_PRESS)
+		mChip8.mKeys[14] = 1;
+	if (glfwGetKey(mWindow, GLFW_KEY_V) == GLFW_PRESS)
+		mChip8.mKeys[15] = 1;
 }
 
 void GlfwErrorCallback(int error, const char* description) {
