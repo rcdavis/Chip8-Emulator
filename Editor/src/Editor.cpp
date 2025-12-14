@@ -10,6 +10,7 @@ static void APIENTRY GLDebugCallback(GLenum source, GLenum type, GLuint id, GLen
 	GLsizei length, const GLchar* message, const void* userParam);
 
 Editor::Editor() :
+	mChip8(),
 	mWindow(nullptr)
 {}
 
@@ -18,7 +19,7 @@ Editor::~Editor() {
 	mWindow = nullptr;
 }
 
-bool Editor::Init() {
+bool Editor::Init(int argc, char** argv) {
 	glfwSetErrorCallback(GlfwErrorCallback);
 
 	if (!glfwInit()) {
@@ -70,6 +71,10 @@ bool Editor::Init() {
 	glfwSwapInterval(1);
 
 	glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
+
+	if (argc > 1) {
+		// TODO: Load game from CLI
+	}
 
 	return true;
 }

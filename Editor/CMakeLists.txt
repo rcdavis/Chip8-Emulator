@@ -25,6 +25,7 @@ FetchContent_MakeAvailable(spdlog)
 add_executable(Editor
     glad/src/gl.c
     src/Utils/Log.cpp
+    src/Chip8.cpp
     src/Editor.cpp
     src/Main.cpp
 )
