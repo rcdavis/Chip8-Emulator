@@ -85,8 +85,19 @@ void Editor::Run() {
 
 		glClear(GL_COLOR_BUFFER_BIT);
 
+		if (mChip8.mShouldRedraw) {
+			// TODO: Render VRAM
+
+			mChip8.mShouldRedraw = false;
+		}
+
 		glfwSwapBuffers(mWindow);
 	}
+}
+
+void Editor::UpdateInput() {
+	// TODO: Update Chip8 keys
+	mChip8.mKeys.fill(0);
 }
 
 void GlfwErrorCallback(int error, const char* description) {

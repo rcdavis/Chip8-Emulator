@@ -14,6 +14,9 @@ public:
 	void Run();
 
 private:
+	void UpdateInput();
+
+private:
 	Chip8 mChip8;
 
 	GLFWwindow* mWindow = nullptr;

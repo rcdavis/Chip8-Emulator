@@ -1,16 +1,16 @@
 #pragma once
 
+#include <cstdint>
 #include <array>
 #include <filesystem>
-#include <functional>
 
 class Chip8 {
 private:
-	static constexpr unsigned int Width = 64;
-	static constexpr unsigned int Height = 32;
-	static constexpr unsigned int VramSize = Width * Height;
+	static constexpr uint32_t Width = 64;
+	static constexpr uint32_t Height = 32;
+	static constexpr uint32_t VramSize = Width * Height;
 
-	static constexpr unsigned int ProgramStartOffset = 0x200;
+	static constexpr uint32_t ProgramStartOffset = 0x200;
 
 public:
 	Chip8() = default;
@@ -19,28 +19,29 @@ public:
 
 	void EmulateCycle();
 
-	void SetRedrawFunc(std::function<void()>& func) { mRedrawFunc = func; }
+	const std::array<uint8_t, VramSize>& GetVram() const { return mVram; }
 
 private:
-	std::function<void()> mRedrawFunc;
+	uint16_t mOpcode = 0;
+	uint16_t mProgramCounter = 0;
+	uint16_t mIndexRegister = 0;
 
-	unsigned short mOpcode = 0;
-	unsigned short mProgramCounter = 0;
-	unsigned short mIndexRegister = 0;
+	std::array<uint16_t, 16> mStack{};
 
-	std::array<unsigned short, 16> mStack{};
+public:
+	std::array<uint8_t, 16> mKeys{};
 
-	std::array<unsigned char, 16> mKeys{};
+private:
+	std::array<uint8_t, 4096> mMemory{};
+	std::array<uint8_t, 16> mV{};
 
-	std::array<unsigned char, 4096> mMemory{};
-	std::array<unsigned char, 16> mV{};
+	std::array<uint8_t, VramSize> mVram{};
 
-	std::array<unsigned char, VramSize> mVram{};
+	uint8_t mStackPointer = 0;
 
+	uint8_t mDelayTimer = 0;
+	uint8_t mSoundTimer = 0;
+
+public:
 	bool mShouldRedraw = false;
-
-	unsigned char mStackPointer = 0;
-
-	unsigned char mDelayTimer = 0;
-	unsigned char mSoundTimer = 0;
 };
