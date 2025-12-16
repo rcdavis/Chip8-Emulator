@@ -36,13 +36,13 @@ bool Chip8::LoadGame(const std::filesystem::path& gameFile) {
 
 	memcpy(mMemory.data(), fontset, sizeof(fontset));
 
-	auto fileSize = std::filesystem::file_size(gameFile);
-	file.read((char*)mMemory.data() + ProgramStartOffset, fileSize);
+	const auto fileSize = std::filesystem::file_size(gameFile);
+	file.read((char*)std::data(mMemory) + ProgramStartOffset, fileSize);
 
-	mStack.fill(0);
-	mKeys.fill(0);
-	mV.fill(0);
-	mVram.fill(0);
+	memset(std::data(mStack), 0, std::size(mStack) * sizeof(uint16_t));
+	memset(std::data(mKeys), 0, std::size(mKeys));
+	memset(std::data(mV), 0, std::size(mV));
+	memset(std::data(mVram), 0, std::size(mVram));
 
 	mOpcode = 0;
 	mIndexRegister = 0;
@@ -63,7 +63,7 @@ void Chip8::EmulateCycle() {
 	{
 		switch (mOpcode) {
 		case 0x00E0: // 0x00E0: Clears the screen
-			mVram.fill(0);
+			memset(std::data(mVram), 0, std::size(mVram));
 			mShouldRedraw = true;
 			mProgramCounter += 2;
 			break;
@@ -270,7 +270,6 @@ void Chip8::EmulateCycle() {
 				if (mKeys[i] != 0) {
 					mV[(mOpcode & 0x0F00) >> 8] = i;
 					isKeyPressed = true;
-					break;
 				}
 			}
 

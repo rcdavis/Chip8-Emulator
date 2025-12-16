@@ -91,8 +91,6 @@ void Editor::Run() {
 
 		if (mChip8.mShouldRedraw) {
 			// TODO: Render VRAM
-
-			mChip8.mShouldRedraw = false;
 		}
 
 		glfwSwapBuffers(mWindow);
@@ -100,7 +98,7 @@ void Editor::Run() {
 }
 
 void Editor::UpdateInput() {
-	mChip8.mKeys.fill(0);
+	memset(std::data(mChip8.mKeys), 0, std::size(mChip8.mKeys));
 
 	if (glfwGetKey(mWindow, GLFW_KEY_1) == GLFW_PRESS)
 		mChip8.mKeys[0] = 1;
