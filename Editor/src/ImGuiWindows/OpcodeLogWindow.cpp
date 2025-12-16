@@ -1,4 +1,4 @@
-#include "OpcodeLogWindow.h"
+#include "ImGuiWindows/OpcodeLogWindow.h"
 
 #include "Utils/FileUtils.h"
 
@@ -38,5 +38,9 @@ void OpcodeLogWindow::OnRender()
 
 void OpcodeLogWindow::SaveLogToFile()
 {
-    ImGuiFileDialog::Instance()->OpenDialog(SaveLogFileDialogKey, "Save Log", "Log (*.log){.log}", "Resources");
+	IGFD::FileDialogConfig config = {
+		.path = "res",
+		.countSelectionMax = 1
+	};
+    ImGuiFileDialog::Instance()->OpenDialog(SaveLogFileDialogKey, "Save Log", "Log (*.log){.log}", config);
 }

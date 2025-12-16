@@ -29,6 +29,13 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(imgui_src)
 
+FetchContent_Declare(
+    imgui_club
+    GIT_REPOSITORY https://github.com/ocornut/imgui_club.git
+    GIT_TAG main
+)
+FetchContent_MakeAvailable(imgui_club)
+
 add_library(imgui STATIC
     ${imgui_src_SOURCE_DIR}/imgui.cpp
     ${imgui_src_SOURCE_DIR}/imgui_draw.cpp
@@ -41,15 +48,22 @@ add_library(imgui STATIC
 target_include_directories(imgui PUBLIC
     ${imgui_src_SOURCE_DIR}
     ${imgui_src_SOURCE_DIR}/backends
+    ${imgui_club_SOURCE_DIR}/imgui_memory_editor
 )
 
 add_executable(Editor
     glad/src/gl.c
-    src/OpenGL/GLShader.cpp
+    ImGuiFileDialog/src/ImGuiFileDialog.cpp
+    src/ImGuiWindows/Chip8InfoWindow.cpp
+    src/ImGuiWindows/ImGuiWindow.cpp
+    src/ImGuiWindows/OpcodeLogWindow.cpp
+    src/OpenGL/OpenGLFramebuffer.cpp
+    src/OpenGL/OpenGLShader.cpp
+    src/OpenGL/OpenGLTexture.cpp
     src/Utils/FileUtils.cpp
     src/Utils/Log.cpp
+    src/Application.cpp
     src/Chip8.cpp
-    src/Editor.cpp
     src/Main.cpp
 )
 
@@ -71,6 +85,7 @@ endif()
 target_include_directories(Editor PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/glad/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/ImGuiFileDialog/include
 )
 
 cmake_policy(SET CMP0072 NEW)

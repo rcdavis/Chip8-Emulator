@@ -1,15 +1,18 @@
 
-#include "Editor.h"
 #include "Utils/Log.h"
+#include "Application.h"
 
-int main(int argc, char** argv) {
-	Log::Init();
+int main()
+{
+    Log::Init();
 
-	Editor editor;
-	if (!editor.Init(argc, argv))
-		return -1;
+    Application app;
+    if (!app.Init())
+        return -1;
 
-	editor.Run();
+    app.Run();
 
-	return 0;
+    app.Shutdown();
+
+    return 0;
 }

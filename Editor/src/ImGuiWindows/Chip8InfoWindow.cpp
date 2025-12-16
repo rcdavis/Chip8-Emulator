@@ -1,4 +1,4 @@
-#include "Chip8InfoWindow.h"
+#include "ImGuiWindows/Chip8InfoWindow.h"
 
 #include "Utils/Log.h"
 #include "Chip8.h"
