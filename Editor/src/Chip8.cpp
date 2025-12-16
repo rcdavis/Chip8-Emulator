@@ -57,6 +57,7 @@ bool Chip8::LoadGame(const std::filesystem::path& gameFile) {
 
 void Chip8::EmulateCycle() {
 	mOpcode = mMemory[mProgramCounter] << 8 | mMemory[mProgramCounter + 1];
+	mProgramCounter += 2;
 
 	switch (mOpcode & 0xF000) {
 	case 0x0000:
@@ -65,12 +66,10 @@ void Chip8::EmulateCycle() {
 		case 0x00E0: // 0x00E0: Clears the screen
 			memset(std::data(mVram), 0, std::size(mVram));
 			mShouldRedraw = true;
-			mProgramCounter += 2;
 			break;
 
 		case 0x00EE: // 0x00EE: Returns from subroutine
 			mProgramCounter = mStack[--mStackPointer];
-			mProgramCounter += 2;
 			break;
 		}
 	}
@@ -87,33 +86,25 @@ void Chip8::EmulateCycle() {
 
 	case 0x3000: // 0x3XNN: Skips the next instruction if VX equals NN
 		if (mV[(mOpcode & 0x0F00) >> 8] == (mOpcode & 0x00FF))
-			mProgramCounter += 4;
-		else
 			mProgramCounter += 2;
 		break;
 
 	case 0x4000: // 0x4XNN: Skips the next instruction if VX doesn't equal NN
 		if (mV[(mOpcode & 0x0F00) >> 8] != (mOpcode & 0x00FF))
-			mProgramCounter += 4;
-		else
 			mProgramCounter += 2;
 		break;
 
 	case 0x5000: // 0x5XY0: Skips the next instruction if VX equals VY
 		if (mV[(mOpcode & 0x0F00) >> 8] == mV[(mOpcode & 0x00F0) >> 4])
-			mProgramCounter += 4;
-		else
 			mProgramCounter += 2;
 		break;
 
 	case 0x6000: // 0x6XNN: Sets VX to NN
 		mV[(mOpcode & 0x0F00) >> 8] = (mOpcode & 0x00FF);
-		mProgramCounter += 2;
 		break;
 
 	case 0x7000: // 0x7XNN: Adds NN to VX
 		mV[(mOpcode & 0x0F00) >> 8] += (mOpcode & 0x00FF);
-		mProgramCounter += 2;
 		break;
 
 	case 0x8000:
@@ -121,22 +112,18 @@ void Chip8::EmulateCycle() {
 		switch (mOpcode & 0x000F) {
 		case 0x0000: // 0x8XY0: Sets VX to the value of VY
 			mV[(mOpcode & 0x0F00) >> 8] = mV[(mOpcode & 0x00F0) >> 4];
-			mProgramCounter += 2;
 			break;
 
 		case 0x0001: // 0x8XY1: Sets VX to "VX OR VY"
 			mV[(mOpcode & 0x0F00) >> 8] |= mV[(mOpcode & 0x00F0) >> 4];
-			mProgramCounter += 2;
 			break;
 
 		case 0x0002: // 0x8XY2: Sets VX to "VX AND VY"
 			mV[(mOpcode & 0x0F00) >> 8] &= mV[(mOpcode & 0x00F0) >> 4];
-			mProgramCounter += 2;
 			break;
 
 		case 0x0003: // 0x8XY3: Sets VX to "VX XOR VY"
 			mV[(mOpcode & 0x0F00) >> 8] ^= mV[(mOpcode & 0x00F0) >> 4];
-			mProgramCounter += 2;
 			break;
 
 		case 0x0004: // 0x8XY4: Adds VY to VX. VF is set to 1 when there's a carry, and to 0 when there isn't
@@ -147,7 +134,6 @@ void Chip8::EmulateCycle() {
 
 			mV[0xF] = (sum > 0xFF) ? 1 : 0;
 			mV[x] += mV[y];
-			mProgramCounter += 2;
 		}
 		break;
 
@@ -159,14 +145,12 @@ void Chip8::EmulateCycle() {
 
 			mV[0xF] = (diff < 0x0) ? 0 : 1;
 			mV[x] -= mV[y];
-			mProgramCounter += 2;
 		}
 		break;
 
 		case 0x0006: // 0x8XY6: Shifts VX right by one. VF is set to the value of the least significant bit of VX before the shift.
 			mV[0xF] = mV[(mOpcode & 0x0F00) >> 8] & 0x1;
 			mV[(mOpcode & 0x0F00) >> 8] >>= 1;
-			mProgramCounter += 2;
 			break;
 
 		case 0x0007: // 0x8XY7: Sets VX to VY minus VX. VF is set to 0 when there's a borrow, and 1 when there isn't
@@ -177,14 +161,12 @@ void Chip8::EmulateCycle() {
 
 			mV[0xF] = (diff < 0x0) ? 0 : 1;
 			mV[x] = mV[y] - mV[x];
-			mProgramCounter += 2;
 		}
 		break;
 
 		case 0x000E: // 0x8XYE: Shifts VX left by one. VF is set to the value of the least significant bit of VX before the shift.
 			mV[0xF] = mV[(mOpcode & 0x0F00) >> 8] >> 7;
 			mV[(mOpcode & 0x0F00) >> 8] <<= 1;
-			mProgramCounter += 2;
 			break;
 		}
 	}
@@ -192,14 +174,11 @@ void Chip8::EmulateCycle() {
 
 	case 0x9000: // 0x9XY0: Skips the next instruction if VX doesn't equal VY
 		if (mV[(mOpcode & 0x0F00) >> 8] != mV[(mOpcode & 0x00F0) >> 4])
-			mProgramCounter += 4;
-		else
 			mProgramCounter += 2;
 		break;
 
 	case 0xA000: // 0xANNN: Sets I to the address NNN
 		mIndexRegister = mOpcode & 0x0FFF;
-		mProgramCounter += 2;
 		break;
 
 	case 0xB000: // 0xBNNN: Jumps to the address NNN plus V0
@@ -208,7 +187,6 @@ void Chip8::EmulateCycle() {
 
 	case 0xC000: // 0xCXNN: Sets VX to a random number and NN
 		mV[(mOpcode & 0x0F00) >> 8] = (rand() % 0xFF) & (mOpcode & 0x00FF);
-		mProgramCounter += 2;
 
 	case 0xD000: // DXYN: Draws a sprite at coordinate (VX, VY) that has a width of 8 and height of N pixels.
 	{
@@ -231,7 +209,6 @@ void Chip8::EmulateCycle() {
 		}
 
 		mShouldRedraw = true;
-		mProgramCounter += 2;
 	}
 	break;
 
@@ -240,15 +217,11 @@ void Chip8::EmulateCycle() {
 		switch (mOpcode & 0x00FF) {
 		case 0x009E: // 0xEX9E: Skips the next instruction if the key stored in VX is pressed
 			if (mKeys[mV[(mOpcode & 0x0F00) >> 8]] != 0)
-				mProgramCounter += 4;
-			else
 				mProgramCounter += 2;
 			break;
 
 		case 0x00A1: // 0xEXA1: Skips the next instruction if the key stored in VX isn't pressed
 			if (mKeys[mV[(mOpcode & 0x0F00) >> 8]] == 0)
-				mProgramCounter += 4;
-			else
 				mProgramCounter += 2;
 			break;
 		}
@@ -260,7 +233,6 @@ void Chip8::EmulateCycle() {
 		switch (mOpcode & 0x00FF) {
 		case 0x0007: // 0xFX07: Sets VX to the value of the delay timer
 			mV[(mOpcode & 0x0F00) >> 8] = mDelayTimer;
-			mProgramCounter += 2;
 			break;
 
 		case 0x000A: // FX0A: A key press is awaited, and then stored in VX
@@ -274,20 +246,16 @@ void Chip8::EmulateCycle() {
 			}
 
 			if (!isKeyPressed)
-				return;
-
-			mProgramCounter += 2;
+				mProgramCounter -= 2;
 		}
 		break;
 
 		case 0x0015: // FX15: Sets the delay timer to VX
 			mDelayTimer = mV[(mOpcode & 0x0F00) >> 8];
-			mProgramCounter += 2;
 			break;
 
 		case 0x0018: // FX18: Sets the sound timer to VX
 			mSoundTimer = mV[(mOpcode & 0x0F00) >> 8];
-			mProgramCounter += 2;
 			break;
 
 		case 0x001E: // 0xFX1E: Adds VX to I
@@ -296,20 +264,17 @@ void Chip8::EmulateCycle() {
 			else
 				mV[0xF] = 0;
 			mIndexRegister += mV[(mOpcode & 0x0F00) >> 8];
-			mProgramCounter += 2;
 			break;
 		}
 
 		case 0x0029: // 0xFX29: Sets I to the location of the sprite for the character in VX. Characters 0-F (in hexadecimal) are represented by a 4x5 font
 			mIndexRegister = mV[(mOpcode & 0x0F00) >> 8] * 0x5;
-			mProgramCounter += 2;
 			break;
 
 		case 0x0033: // 0xFX33: Stores the binary-coded decimal representation of VX at the addresses I, I plus 1, and I plus 2;
 			mMemory[mIndexRegister] = mV[(mOpcode & 0x0F00) >> 8] / 100;
 			mMemory[mIndexRegister + 1] = (mV[(mOpcode & 0x0F00) >> 8] / 10) % 10;
 			mMemory[mIndexRegister + 2] = (mV[(mOpcode & 0x0F00) >> 8] % 100) % 10;
-			mProgramCounter += 2;
 			break;
 
 		case 0x0055: // 0xFX55: Stores V0 to VX in memory starting at address I
@@ -319,7 +284,6 @@ void Chip8::EmulateCycle() {
 				mMemory[mIndexRegister + i] = mV[i];
 
 			mIndexRegister += x + 1;
-			mProgramCounter += 2;
 		}
 		break;
 
@@ -330,7 +294,6 @@ void Chip8::EmulateCycle() {
 				mV[i] = mMemory[mIndexRegister + i];
 
 			mIndexRegister += x + 1;
-			mProgramCounter += 2;
 		}
 		break;
 	}

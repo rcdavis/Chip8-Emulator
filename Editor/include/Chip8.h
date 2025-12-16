@@ -21,6 +21,10 @@ public:
 
 	const std::array<uint8_t, VramSize>& GetVram() const { return mVram; }
 
+	constexpr uint32_t GetWidth() const { return Width; }
+	constexpr uint32_t GetHeight() const { return Height; }
+	constexpr uint32_t GetVramSize() const { return VramSize; }
+
 private:
 	uint16_t mOpcode = 0;
 	uint16_t mProgramCounter = 0;

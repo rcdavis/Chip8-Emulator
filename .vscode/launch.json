@@ -6,7 +6,9 @@
 			"type": "cppdbg",
 			"request": "launch",
 			"program": "${workspaceFolder}/build/Editor/Editor",
-			"args": [],
+			"args": [
+				"res/games/pong2.c8"
+			],
 			"stopAtEntry": false,
 			"cwd": "${workspaceFolder}/build/Editor",
 			"environment": [],
