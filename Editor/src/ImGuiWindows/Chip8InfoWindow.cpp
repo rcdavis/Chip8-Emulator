@@ -1,4 +1,4 @@
-#include "Chip8InfoWindow.h"
+#include "ImGuiWindows/Chip8InfoWindow.h"
 
 #include "Utils/Log.h"
 #include "Chip8.h"
@@ -6,7 +6,7 @@
 #include "imgui.h"
 
 Chip8InfoWindow::Chip8InfoWindow(bool isOpen) :
-    ImGuiWindow("Chip8 Info", "chip8InfoWindowOpen", isOpen)
+    BaseImGuiWindow("Chip8 Info", "chip8InfoWindowOpen", isOpen)
 {}
 
 void Chip8InfoWindow::OnRender()

@@ -1,44 +1,51 @@
-#include "OpenGL/GLShader.h"
+#include "OpenGL/OpenGLShader.h"
 
 #include "Utils/Log.h"
 
 #include "glad/gl.h"
 #include <vector>
 
-GLShader::GLShader(const char* const vertexSrc, const char* const fragmentSrc) :
-	mId(0)
+OpenGLShader::OpenGLShader(const char* const vertexSrc, const char* const fragmentSrc)
 {
     Create(vertexSrc, fragmentSrc);
 }
 
-GLShader::~GLShader() {
+OpenGLShader::~OpenGLShader()
+{
     Delete();
 }
 
-void GLShader::Create(const char* const vertexSrc, const char* const fragmentSrc) {
+void OpenGLShader::Create(const char* const vertexSrc, const char* const fragmentSrc)
+{
     Delete();
 
+    const uint32_t program = glCreateProgram();
+
     const uint32_t vertShader = CompileShader(GL_VERTEX_SHADER, vertexSrc);
-    if (!vertShader) {
-		LOG_ERROR("Failed to compile vertex shader");
+    if (!vertShader)
+    {
+        glDeleteProgram(program);
+        MAKE_ASSERT(false, "Failed to compile vertex shader");
         return;
     }
 
     const uint32_t fragShader = CompileShader(GL_FRAGMENT_SHADER, fragmentSrc);
-    if (!fragShader) {
+    if (!fragShader)
+    {
+        glDeleteProgram(program);
         glDeleteShader(vertShader);
-		LOG_ERROR("Failed to compile fragment shader");
+        MAKE_ASSERT(false, "Failed to compile fragment shader");
         return;
     }
 
-    const uint32_t program = glCreateProgram();
     glAttachShader(program, vertShader);
     glAttachShader(program, fragShader);
 
     glLinkProgram(program);
     GLint isLinked = 0;
     glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
-    if (isLinked == GL_FALSE) {
+    if (isLinked == GL_FALSE)
+    {
         GLint maxLength = 0;
         glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
 
@@ -50,7 +57,8 @@ void GLShader::Create(const char* const vertexSrc, const char* const fragmentSrc
         glDeleteShader(vertShader);
         glDeleteShader(fragShader);
 
-        LOG_ERROR("Failed to link shader: {0}", std::data(infoLog));
+        LOG_ERROR("Failed to link shader: {}", std::data(infoLog));
+        MAKE_ASSERT(false, "Shader link failure");
     }
 
     glDetachShader(program, vertShader);
@@ -59,7 +67,8 @@ void GLShader::Create(const char* const vertexSrc, const char* const fragmentSrc
     mId = program;
 }
 
-uint32_t GLShader::CompileShader(const uint32_t type, const char* const src) {
+uint32_t OpenGLShader::CompileShader(const uint32_t type, const char* const src)
+{
     const GLuint shader = glCreateShader(type);
 
     glShaderSource(shader, 1, &src, 0);
@@ -67,7 +76,8 @@ uint32_t GLShader::CompileShader(const uint32_t type, const char* const src) {
 
     GLint isCompiled = 0;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &isCompiled);
-    if (isCompiled == GL_FALSE) {
+    if (isCompiled == GL_FALSE)
+    {
         GLint maxLength = 0;
         glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
 
@@ -83,26 +93,36 @@ uint32_t GLShader::CompileShader(const uint32_t type, const char* const src) {
     return shader;
 }
 
-void GLShader::Delete() {
-    if (mId) {
+void OpenGLShader::Delete()
+{
+    if (mId)
+    {
         glDeleteProgram(mId);
         mId = 0;
     }
 }
 
-void GLShader::Bind() const {
+void OpenGLShader::Bind() const
+{
     glUseProgram(mId);
 }
 
-void GLShader::Unbind() const {
+void OpenGLShader::Unbind() const
+{
     glUseProgram(0);
 }
 
-void GLShader::SetVertexAttribf(const char* const name, int count, uint32_t stride, uint32_t offset) {
+void OpenGLShader::SetVertexAttribf(
+    const char* const name,
+    int count,
+    uint32_t stride,
+    uint32_t offset)
+{
     const auto attribLoc = glGetAttribLocation(mId, name);
-    if (attribLoc == -1) {
-        LOG_ERROR("Failed to find attribute location for \"{0}\" in shader", name);
-		return;
+    if (attribLoc == -1)
+    {
+        LOG_ERROR("Failed to find attribute location for \"{}\" in shader", name);
+        MAKE_ASSERT(false, "SetVertexAttribf failed");
     }
 
     glEnableVertexAttribArray(attribLoc);

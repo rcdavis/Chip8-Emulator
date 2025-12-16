@@ -1,13 +1,13 @@
 #pragma once
 
-#include <cstdint>
+#include "Types.h"
 
-class GLShader
+class OpenGLShader
 {
 public:
-    GLShader() = default;
-    GLShader(const char* const vertexSrc, const char* const fragmentSrc);
-    ~GLShader();
+    OpenGLShader() = default;
+    OpenGLShader(const char* const vertexSrc, const char* const fragmentSrc);
+    ~OpenGLShader();
 
     void Create(const char* const vertexSrc, const char* const fragmentSrc);
     void Delete();

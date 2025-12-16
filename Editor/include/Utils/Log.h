@@ -26,3 +26,10 @@ private:
 #	define LOG_ERROR(...)
 #	define LOG_CRITICAL(...)
 #endif
+
+#ifdef ASSERTS_ENABLED
+#   include <cassert>
+#   define MAKE_ASSERT(x, ...) if(!(x)) {LOG_ERROR("Assertion Failed: {0}", __VA_ARGS__); assert(x);}
+#else
+#   define MAKE_ASSERT(x, ...)
+#endif

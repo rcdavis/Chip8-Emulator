@@ -22,12 +22,48 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(spdlog)
 
+FetchContent_Declare(
+    imgui_src
+    GIT_REPOSITORY https://github.com/ocornut/imgui.git
+    GIT_TAG v1.92.5-docking
+)
+FetchContent_MakeAvailable(imgui_src)
+
+FetchContent_Declare(
+    imgui_club
+    GIT_REPOSITORY https://github.com/ocornut/imgui_club.git
+    GIT_TAG main
+)
+FetchContent_MakeAvailable(imgui_club)
+
+add_library(imgui STATIC
+    ${imgui_src_SOURCE_DIR}/imgui.cpp
+    ${imgui_src_SOURCE_DIR}/imgui_draw.cpp
+    ${imgui_src_SOURCE_DIR}/imgui_tables.cpp
+    ${imgui_src_SOURCE_DIR}/imgui_widgets.cpp
+    ${imgui_src_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
+    ${imgui_src_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
+)
+
+target_include_directories(imgui PUBLIC
+    ${imgui_src_SOURCE_DIR}
+    ${imgui_src_SOURCE_DIR}/backends
+    ${imgui_club_SOURCE_DIR}/imgui_memory_editor
+)
+
 add_executable(Editor
     glad/src/gl.c
-    src/OpenGL/GLShader.cpp
+    ImGuiFileDialog/src/ImGuiFileDialog.cpp
+    src/ImGuiWindows/BaseImGuiWindow.cpp
+    src/ImGuiWindows/Chip8InfoWindow.cpp
+    src/ImGuiWindows/OpcodeLogWindow.cpp
+    src/OpenGL/OpenGLFramebuffer.cpp
+    src/OpenGL/OpenGLShader.cpp
+    src/OpenGL/OpenGLTexture.cpp
+    src/Utils/FileUtils.cpp
     src/Utils/Log.cpp
+    src/Application.cpp
     src/Chip8.cpp
-    src/Editor.cpp
     src/Main.cpp
 )
 
@@ -42,12 +78,14 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_definitions(Editor PUBLIC
         DEBUG
         LOGGING_ENABLED
+        ASSERTS_ENABLED
     )
 endif()
 
 target_include_directories(Editor PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/glad/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/ImGuiFileDialog/include
 )
 
 cmake_policy(SET CMP0072 NEW)
@@ -56,5 +94,6 @@ find_package(OpenGL REQUIRED)
 target_link_libraries(Editor PRIVATE
     glfw
     OpenGL::GL
+    imgui
     spdlog::spdlog_header_only
 )
