@@ -46,6 +46,7 @@ target_include_directories(imgui PUBLIC
 add_executable(Editor
     glad/src/gl.c
     src/OpenGL/GLShader.cpp
+    src/Utils/FileUtils.cpp
     src/Utils/Log.cpp
     src/Chip8.cpp
     src/Editor.cpp
