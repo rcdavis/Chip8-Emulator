@@ -9,6 +9,13 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(glfw)
 
+FetchContent_Declare(
+    glm
+    GIT_REPOSITORY https://github.com/g-truc/glm.git
+    GIT_TAG 1.0.2
+)
+FetchContent_MakeAvailable(glm)
+
 set(SPDLOG_HEADER_ONLY ON CACHE BOOL "" FORCE)
 set(SPDLOG_BUILD_SHARED OFF CACHE BOOL "" FORCE)
 set(SPDLOG_BUILD_EXAMPLE OFF CACHE BOOL "" FORCE)
@@ -24,10 +31,16 @@ FetchContent_MakeAvailable(spdlog)
 
 add_executable(Editor
     glad/src/gl.c
+    src/OpenGL/GLIndexBuffer.cpp
+    src/OpenGL/GLShader.cpp
+    src/OpenGL/GLTexture.cpp
+    src/OpenGL/GLVertexArray.cpp
+    src/OpenGL/GLVertexBuffer.cpp
     src/Utils/Log.cpp
     src/Chip8.cpp
     src/Editor.cpp
     src/Main.cpp
+    stb/src/stb_image.c
 )
 
 target_compile_definitions(Editor PUBLIC
@@ -44,12 +57,14 @@ endif()
 target_include_directories(Editor PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/glad/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/stb/include
 )
 
 cmake_policy(SET CMP0072 NEW)
 find_package(OpenGL REQUIRED)
 
 target_link_libraries(Editor PRIVATE
+    glm::glm
     glfw
     OpenGL::GL
     spdlog::spdlog_header_only
