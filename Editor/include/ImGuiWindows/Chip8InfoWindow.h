@@ -4,16 +4,15 @@
 
 class Chip8;
 
-class Chip8InfoWindow : public BaseImGuiWindow
-{
+class Chip8InfoWindow : public BaseImGuiWindow {
 public:
-    Chip8InfoWindow(bool isOpen = false);
+	Chip8InfoWindow(bool isOpen = false);
 
-    void SetChip8(Chip8* const chip8) { mChip8 = chip8; }
+	void SetChip8(Chip8* const chip8) { mChip8 = chip8; }
 
 protected:
-    void OnRender() override;
+	void OnRender() override;
 
 private:
-    Chip8* mChip8 = nullptr;
+	Chip8* mChip8 = nullptr;
 };

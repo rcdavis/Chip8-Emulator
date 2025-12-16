@@ -16,73 +16,71 @@
 struct GLFWwindow;
 class BaseImGuiWindow;
 
-class Application
-{
+class Application {
 public:
-    Application() = default;
-    ~Application();
+	Application() = default;
+	~Application();
 
-    bool Init();
-    void Shutdown();
+	bool Init();
+	void Shutdown();
 
-    void Run();
+	void Run();
 
-    void KeyCallback(int key, int scancode, int action, int mods);
-
-private:
-    static void ErrorCallback(int error, const char* description);
-
-    void InitVertexBuffer();
-    void InitIndexBuffer();
-    void InitShader();
-    void InitImGui();
-
-    void ImGuiBeginFrame();
-    void ImGuiEndFrame();
-    void ImGuiRender();
-
-    void ImGuiMainMenuRender();
-    void RenderDialogs();
-
-    void UpdateInput(std::array<uint8_t, 16>& keys);
-    void DrawChip8(const std::vector<uint32_t>& vram);
-
-    void LoadGame();
-
-    void LoadEmulatorSettings();
-    void SaveEmulatorSettings();
-
-    void AddOpcodeLogLine(const std::string& line);
-
-    void ExitGame();
-
-    template <typename T>
-    Ref<T> GetImGuiWindow();
+	void KeyCallback(int key, int scancode, int action, int mods);
 
 private:
-    enum class Theme
-    {
-        Light,
-        Dark
-    };
+	static void ErrorCallback(int error, const char* description);
+
+	void InitVertexBuffer();
+	void InitIndexBuffer();
+	void InitShader();
+	void InitImGui();
+
+	void ImGuiBeginFrame();
+	void ImGuiEndFrame();
+	void ImGuiRender();
+
+	void ImGuiMainMenuRender();
+	void RenderDialogs();
+
+	void UpdateInput(std::array<uint8_t, 16>& keys);
+	void DrawChip8(const std::vector<uint32_t>& vram);
+
+	void LoadGame();
+
+	void LoadEmulatorSettings();
+	void SaveEmulatorSettings();
+
+	void AddOpcodeLogLine(const std::string& line);
+
+	void ExitGame();
+
+	template <typename T>
+	Ref<T> GetImGuiWindow();
 
 private:
-    Chip8 mChip8;
-    GLFWwindow* mWindow = nullptr;
-    uint32_t mVAO = 0;
-    uint32_t mVertexBuffer = 0;
-    uint32_t mIndexBuffer = 0;
-    OpenGLShader mShader;
-    OpenGLFramebuffer mFrameBuffer;
-    OpenGLTexture mTexture;
+	enum class Theme {
+		Light,
+		Dark
+	};
 
-    std::vector<Ref<BaseImGuiWindow>> mImGuiWindows;
+private:
+	Chip8 mChip8;
+	GLFWwindow* mWindow = nullptr;
+	uint32_t mVAO = 0;
+	uint32_t mVertexBuffer = 0;
+	uint32_t mIndexBuffer = 0;
+	OpenGLShader mShader;
+	OpenGLFramebuffer mFrameBuffer;
+	OpenGLTexture mTexture;
 
-    MemoryEditor mMemoryEditor;
-    MemoryEditor mVramEditor;
+	std::vector<Ref<BaseImGuiWindow>> mImGuiWindows;
 
-    Theme mTheme = Theme::Dark;
+	MemoryEditor mMemoryEditor;
+	MemoryEditor mVramEditor;
 
-    bool mImGuiInitialized = false;
-    bool mIsMetricsWindowOpen = true;
+	Theme mTheme = Theme::Dark;
+
+	bool mImGuiInitialized = false;
+	bool mIsMetricsWindowOpen = true;
 };
