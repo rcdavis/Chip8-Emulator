@@ -6,6 +6,7 @@
 			"includePath": [
 				"${workspaceFolder}/build/_deps/glfw-src/include",
 				"${workspaceFolder}/build/_deps/spdlog-src/include",
+				"${workspaceFolder}/build/_deps/imgui_src-src",
 				"${workspaceFolder}/Editor/include",
 				"${workspaceFolder}/Editor/glad/include",
 				"/usr/include",
