@@ -14,7 +14,8 @@
 			"defines": [
 				"DEBUG",
 				"GLFW_INCLUDE_NONE",
-				"LOGGING_ENABLED"
+				"LOGGING_ENABLED",
+				"ASSERTS_ENABLED"
 			],
 			"compilerPath": "/usr/bin/gcc",
 			"cStandard": "c17",

@@ -42,6 +42,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_definitions(Editor PUBLIC
         DEBUG
         LOGGING_ENABLED
+        ASSERTS_ENABLED
     )
 endif()
 
