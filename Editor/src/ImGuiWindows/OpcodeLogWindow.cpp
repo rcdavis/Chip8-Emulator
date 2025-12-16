@@ -8,39 +8,35 @@
 constexpr char* SaveLogFileDialogKey = "SaveLogFile";
 
 OpcodeLogWindow::OpcodeLogWindow(bool isOpen) :
-    BaseImGuiWindow("Opcode Log", "opcodesLogOpen", isOpen)
+	BaseImGuiWindow("Opcode Log", "opcodesLogOpen", isOpen)
 {}
 
-void OpcodeLogWindow::OnRender()
-{
-    if (ImGui::Button("Clear"))
-        mLines.clear();
-    ImGui::SameLine();
-    if (ImGui::Button("Save To File"))
-        SaveLogToFile();
+void OpcodeLogWindow::OnRender() {
+	if (ImGui::Button("Clear"))
+		mLines.clear();
+	ImGui::SameLine();
+	if (ImGui::Button("Save To File"))
+		SaveLogToFile();
 
-    ImGui::BeginChild("OpcodeLog");
-    for (const auto& line : mLines)
-        ImGui::Text(line.c_str());
-    ImGui::EndChild();
+	ImGui::BeginChild("OpcodeLog");
+	for (const auto& line : mLines)
+		ImGui::Text(line.c_str());
+	ImGui::EndChild();
 
-    if (ImGuiFileDialog::Instance()->Display(SaveLogFileDialogKey, ImGuiWindowFlags_NoCollapse, ImVec2(600.0f, 400.0f)))
-    {
-        if (ImGuiFileDialog::Instance()->IsOk())
-        {
-            const std::filesystem::path file = ImGuiFileDialog::Instance()->GetFilePathName();
-            FileUtils::WriteLines(file, mLines);
-        }
+	if (ImGuiFileDialog::Instance()->Display(SaveLogFileDialogKey, ImGuiWindowFlags_NoCollapse, ImVec2(600.0f, 400.0f))) {
+		if (ImGuiFileDialog::Instance()->IsOk()) {
+			const std::filesystem::path file = ImGuiFileDialog::Instance()->GetFilePathName();
+			FileUtils::WriteLines(file, mLines);
+		}
 
-        ImGuiFileDialog::Instance()->Close();
-    }
+		ImGuiFileDialog::Instance()->Close();
+	}
 }
 
-void OpcodeLogWindow::SaveLogToFile()
-{
+void OpcodeLogWindow::SaveLogToFile() {
 	const IGFD::FileDialogConfig config = {
 		.path = "res",
 		.countSelectionMax = 1
 	};
-    ImGuiFileDialog::Instance()->OpenDialog(SaveLogFileDialogKey, "Save Log", "Log (*.log){.log}", config);
+	ImGuiFileDialog::Instance()->OpenDialog(SaveLogFileDialogKey, "Save Log", "Log (*.log){.log}", config);
 }

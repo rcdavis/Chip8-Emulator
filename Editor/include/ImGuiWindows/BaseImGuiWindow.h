@@ -2,28 +2,27 @@
 
 #include <string>
 
-class BaseImGuiWindow
-{
+class BaseImGuiWindow {
 public:
-    BaseImGuiWindow(const std::string& title, const std::string& saveId, bool isOpen = false);
-    virtual ~BaseImGuiWindow() {}
+	BaseImGuiWindow(const std::string& title, const std::string& saveId, bool isOpen = false);
+	virtual ~BaseImGuiWindow() {}
 
-    const std::string& GetTitle() const { return mTitle; }
-    void SetTitle(const std::string& title) { mTitle = title; }
+	const std::string& GetTitle() const { return mTitle; }
+	void SetTitle(const std::string& title) { mTitle = title; }
 
-    const std::string& GetSaveId() const { return mSaveId; }
+	const std::string& GetSaveId() const { return mSaveId; }
 
-    bool IsOpen() const { return mIsOpen; }
-    void Open(bool isOpen) { mIsOpen = isOpen; }
+	bool IsOpen() const { return mIsOpen; }
+	void Open(bool isOpen) { mIsOpen = isOpen; }
 
-    virtual bool RenderMenuItem(const char* const shortcut = nullptr);
-    void Render();
-
-protected:
-    virtual void OnRender() = 0;
+	virtual bool RenderMenuItem(const char* const shortcut = nullptr);
+	void Render();
 
 protected:
-    std::string mTitle;
-    std::string mSaveId;
-    bool mIsOpen = false;
+	virtual void OnRender() = 0;
+
+protected:
+	std::string mTitle;
+	std::string mSaveId;
+	bool mIsOpen = false;
 };

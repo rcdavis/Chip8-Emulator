@@ -2,17 +2,16 @@
 #include "Utils/Log.h"
 #include "Application.h"
 
-int main()
-{
-    Log::Init();
+int main(int argc, char** argv) {
+	Log::Init();
 
-    Application app;
-    if (!app.Init())
-        return -1;
+	Application app;
+	if (!app.Init())
+		return -1;
 
-    app.Run();
+	app.Run();
 
-    app.Shutdown();
+	app.Shutdown();
 
-    return 0;
+	return 0;
 }
