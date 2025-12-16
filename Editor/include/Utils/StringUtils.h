@@ -1,12 +1,10 @@
 #pragma once
 
-#include <string>
+#include "spdlog/fmt/fmt.h"
 
 namespace StringUtils {
 	template <typename... Args>
 	std::string Format(const char* const format, Args... args) {
-		char buffer[128] = {};
-		snprintf(buffer, sizeof(buffer), format, args...);
-		return buffer;
+		return spdlog::fmt_lib::format(format, std::forward<Args>(args)...);
 	}
 }

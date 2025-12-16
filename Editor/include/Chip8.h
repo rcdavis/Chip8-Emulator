@@ -21,6 +21,9 @@ public:
 		e128x64
 	};
 
+private:
+	static constexpr uint16_t ProgramMemoryOffset = 0x200;
+
 public:
 	Chip8();
 

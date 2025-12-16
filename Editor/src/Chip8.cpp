@@ -11,16 +11,16 @@
 Chip8::Chip8() {
 	srand((unsigned int)time(0));
 
-	mRpl.fill(0);
+	memset(std::data(mRpl), 0, std::size(mRpl));
 
 	Init();
 }
 
 void Chip8::Init() {
-	mMemory.fill(0);
-	mV.fill(0);
-	mStack.fill(0);
-	mKeys.fill(0);
+	memset(std::data(mMemory), 0, std::size(mMemory));
+	memset(std::data(mV), 0, std::size(mV));
+	memset(std::data(mStack), 0, std::size(mStack) * sizeof(uint16_t));
+	memset(std::data(mKeys), 0, std::size(mKeys));
 
 	mVram.resize(GetScreenWidth() * GetScreenHeight());
 	memset(std::data(mVram), 0, std::size(mVram));
@@ -29,7 +29,7 @@ void Chip8::Init() {
 
 	mIndexReg = 0;
 	mSP = 0;
-	mPC = 0x200;
+	mPC = ProgramMemoryOffset;
 
 	mDelayTimer = 0;
 	mSoundTimer = 0;
@@ -38,7 +38,7 @@ void Chip8::Init() {
 
 	mRedraw = true;
 
-	constexpr std::array<const uint8_t, 240> fontSet = {
+	constexpr std::array<uint8_t, 240> fontSet = {
 		0xF0, 0x90, 0x90, 0x90, 0xF0, //0
 		0x20, 0x60, 0x20, 0x20, 0x70, //1
 		0xF0, 0x10, 0xF0, 0x80, 0xF0, //2
@@ -119,7 +119,7 @@ void Chip8::EmulateCycle() {
 		case 0x00EE: // 0x00EE: Returns from subroutine
 			mPC = mStack[--mSP];
 			if (mOpcodeLogFunc)
-				mOpcodeLogFunc(StringUtils::Format("0x00E0: PC=%X", mPC));
+				mOpcodeLogFunc(StringUtils::Format("0x00E0: PC={:#X}", mPC));
 			break;
 
 		case 0x00FF: // 0x00FF: Enable 128x64 high res graphics mode
@@ -158,7 +158,7 @@ void Chip8::EmulateCycle() {
 		if ((mOpcode & 0x00F0) == 0x00C0) {
 			// TODO
 			if (mOpcodeLogFunc)
-				mOpcodeLogFunc(StringUtils::Format("0x00CN: Scroll display down N=%d", mOpcode & 0x000F));
+				mOpcodeLogFunc(StringUtils::Format("0x00CN: Scroll display down N={}", mOpcode & 0x000F));
 		}
 	}
 	break;
@@ -166,13 +166,13 @@ void Chip8::EmulateCycle() {
 	case 0x1000: // 0x1NNN Jump to address NNN
 		mPC = GetAddress();
 		if (mOpcodeLogFunc)
-			mOpcodeLogFunc(StringUtils::Format("0x1NNN: Jump to address NNN=%X", GetAddress()));
+			mOpcodeLogFunc(StringUtils::Format("0x1NNN: Jump to address NNN={:#X}", mPC));
 		break;
 
 	case 0x2000: // 0x2NNN Calls subroutine at NNN
 	{
 		if (mOpcodeLogFunc)
-			mOpcodeLogFunc(StringUtils::Format("0x2NNN: Calls subroutine PC(before)=%X NNN=%X", mPC, GetAddress()));
+			mOpcodeLogFunc(StringUtils::Format("0x2NNN: Calls subroutine PC(before)={:#X} NNN={:#X}", mPC, GetAddress()));
 		mStack[mSP++] = mPC;
 		mPC = GetAddress();
 	}
@@ -183,7 +183,7 @@ void Chip8::EmulateCycle() {
 		if (GetVX() == GetNN())
 			mPC += 2;
 		if (mOpcodeLogFunc)
-			mOpcodeLogFunc(StringUtils::Format("0x3XNN: VX=%d NN=%d", GetVX(), GetNN()));
+			mOpcodeLogFunc(StringUtils::Format("0x3XNN: VX={} NN={}", GetVX(), GetNN()));
 	}
 	break;
 
@@ -192,7 +192,7 @@ void Chip8::EmulateCycle() {
 		if (GetVX() != GetNN())
 			mPC += 2;
 		if (mOpcodeLogFunc)
-			mOpcodeLogFunc(StringUtils::Format("0x4XNN: VX=%d NN=%d", GetVX(), GetNN()));
+			mOpcodeLogFunc(StringUtils::Format("0x4XNN: VX={} NN={}", GetVX(), GetNN()));
 	}
 	break;
 
@@ -201,19 +201,19 @@ void Chip8::EmulateCycle() {
 		if (GetVX() == GetVY())
 			mPC += 2;
 		if (mOpcodeLogFunc)
-			mOpcodeLogFunc(StringUtils::Format("0x5XY0: VX=%d VY=%d", GetVX(), GetVY()));
+			mOpcodeLogFunc(StringUtils::Format("0x5XY0: VX={} VY={}", GetVX(), GetVY()));
 	}
 	break;
 
 	case 0x6000: // 0x6XNN Sets VX to NN
 		if (mOpcodeLogFunc)
-			mOpcodeLogFunc(StringUtils::Format("0x6XNN: VX(before)=%d NN=%d", GetVX(), GetNN()));
+			mOpcodeLogFunc(StringUtils::Format("0x6XNN: VX(before)={} NN={}", GetVX(), GetNN()));
 		SetVX(GetNN());
 		break;
 
 	case 0x7000: // 0x7XNN Adds NN to VX (Carry flag is not changed)
 		if (mOpcodeLogFunc)
-			mOpcodeLogFunc(StringUtils::Format("0x7XNN: VX=%d NN=%d VX+NN=%d", GetVX(), GetNN(), GetVX() + GetNN()));
+			mOpcodeLogFunc(StringUtils::Format("0x7XNN: VX={} NN={} VX+NN={}", GetVX(), GetNN(), GetVX() + GetNN()));
 		SetVX(GetVX() + GetNN());
 		break;
 
@@ -223,27 +223,27 @@ void Chip8::EmulateCycle() {
 		{
 		case 0x0000: // 0x8XY0 Set VX to VY
 			if (mOpcodeLogFunc)
-				mOpcodeLogFunc(StringUtils::Format("0x8XY0: VX=%d VY=%d", GetVX(), GetVY()));
+				mOpcodeLogFunc(StringUtils::Format("0x8XY0: VX={} VY={}", GetVX(), GetVY()));
 			SetVX(GetVY());
 			break;
 
 		case 0x0001: // 0x8XY1 Set VX to VX or VY
 			if (mOpcodeLogFunc)
-				mOpcodeLogFunc(StringUtils::Format("0x8XY1: VX=%d VY=%d VX|VY=%d",
+				mOpcodeLogFunc(StringUtils::Format("0x8XY1: VX={} VY={} VX|VY={}",
 					GetVX(), GetVY(), GetVX() | GetVY()));
 			SetVX(GetVX() | GetVY());
 			break;
 
 		case 0x0002: // 0x8XY2 Set VX to VX and VY
 			if (mOpcodeLogFunc)
-				mOpcodeLogFunc(StringUtils::Format("0x8XY2: VX=%d VY=%d VX&VY=%d",
+				mOpcodeLogFunc(StringUtils::Format("0x8XY2: VX={} VY={} VX&VY={}",
 					GetVX(), GetVY(), GetVX() & GetVY()));
 			SetVX(GetVX() & GetVY());
 			break;
 
 		case 0x0003: // 0x8XY3 Set VX to VX xor VY
 			if (mOpcodeLogFunc)
-				mOpcodeLogFunc(StringUtils::Format("0x8XY3: VX=%d VY=%d VX^VY=%d",
+				mOpcodeLogFunc(StringUtils::Format("0x8XY3: VX={} VY={} VX^VY={}",
 					GetVX(), GetVY(), GetVX() ^ GetVY()));
 			SetVX(GetVX() ^ GetVY());
 			break;
@@ -255,7 +255,7 @@ void Chip8::EmulateCycle() {
 			else
 				SetVF(0);
 			if (mOpcodeLogFunc)
-				mOpcodeLogFunc(StringUtils::Format("0x8XY4: VX=%d VY=%d VX+VY=%d VF=%d",
+				mOpcodeLogFunc(StringUtils::Format("0x8XY4: VX={} VY={} VX+VY={} VF={}",
 					GetVX(), GetVY(), GetVX() + GetVY(), GetVF()));
 			SetVX(GetVX() + GetVY());
 		}
@@ -268,7 +268,7 @@ void Chip8::EmulateCycle() {
 			else
 				SetVF(0);
 			if (mOpcodeLogFunc)
-				mOpcodeLogFunc(StringUtils::Format("0x8XY5: VX=%d VY=%d VX-VY=%d VF=%d",
+				mOpcodeLogFunc(StringUtils::Format("0x8XY5: VX={} VY={} VX-VY={} VF={}",
 					GetVX(), GetVY(), GetVX() - GetVY(), GetVF()));
 			SetVX(GetVX() - GetVY());
 		}
@@ -282,7 +282,7 @@ void Chip8::EmulateCycle() {
 			SetVF(GetVX() & 0x1);
 			SetVX(GetVX() >> 1);
 			if (mOpcodeLogFunc)
-				mOpcodeLogFunc(StringUtils::Format("0x8XY6: VX=%d VF=%d", GetVX(), GetVF()));
+				mOpcodeLogFunc(StringUtils::Format("0x8XY6: VX={} VF={}", GetVX(), GetVF()));
 		}
 		break;
 
@@ -293,7 +293,7 @@ void Chip8::EmulateCycle() {
 			else
 				SetVF(0);
 			if (mOpcodeLogFunc)
-				mOpcodeLogFunc(StringUtils::Format("0x8XY7: VX=%d VY=%d VY-VX=%d VF=%d",
+				mOpcodeLogFunc(StringUtils::Format("0x8XY7: VX={} VY={} VY-VX={} VF={}",
 					GetVX(), GetVY(), GetVY() - GetVX(), GetVF()));
 			SetVX(GetVY() - GetVX());
 		}
@@ -307,7 +307,7 @@ void Chip8::EmulateCycle() {
 			SetVF(GetVX() >> 7);
 			SetVX(GetVX() << 1);
 			if (mOpcodeLogFunc)
-				mOpcodeLogFunc(StringUtils::Format("0x8XYE: VX=%d VF=%d", GetVX(), GetVF()));
+				mOpcodeLogFunc(StringUtils::Format("0x8XYE: VX={} VF={}", GetVX(), GetVF()));
 		}
 		break;
 		}
@@ -319,14 +319,14 @@ void Chip8::EmulateCycle() {
 		if (GetVX() != GetVY())
 			mPC += 2;
 		if (mOpcodeLogFunc)
-			mOpcodeLogFunc(StringUtils::Format("0x9XY0: VX=%d VY=%d", GetVX(), GetVY()));
+			mOpcodeLogFunc(StringUtils::Format("0x9XY0: VX={} VY={}", GetVX(), GetVY()));
 	}
 	break;
 
 	case 0xA000: // 0xANNN Sets I to the address NNN
 		mIndexReg = GetAddress();
 		if (mOpcodeLogFunc)
-			mOpcodeLogFunc(StringUtils::Format("0xANNN: I=%X NNN=%X", mIndexReg, GetAddress()));
+			mOpcodeLogFunc(StringUtils::Format("0xANNN: I={:#X} NNN={:#X}", mIndexReg, GetAddress()));
 		break;
 
 	case 0xB000: // 0xBNNN Jumps to the address NNN plus V0
@@ -335,7 +335,7 @@ void Chip8::EmulateCycle() {
 		else
 			mPC = GetAddress() + mV[0];
 		if (mOpcodeLogFunc)
-			mOpcodeLogFunc(StringUtils::Format("0xBNNN: VX=%d V0=%d NNN=%X", GetVX(), mV[0], GetAddress()));
+			mOpcodeLogFunc(StringUtils::Format("0xBNNN: VX={} V0={} NNN={:#X}", GetVX(), mV[0], GetAddress()));
 		break;
 
 	case 0xC000: // 0xCXNN Sets VX to the result of bitwise and op on a random number and NN
@@ -343,7 +343,7 @@ void Chip8::EmulateCycle() {
 		const uint8_t randVal = rand() & 0xFF;
 		SetVX(randVal & GetNN());
 		if (mOpcodeLogFunc)
-			mOpcodeLogFunc(StringUtils::Format("0xCXNN: randVal=%d NN=%d", randVal, GetNN()));
+			mOpcodeLogFunc(StringUtils::Format("0xCXNN: randVal={} NN={}", randVal, GetNN()));
 	}
 	break;
 
@@ -406,7 +406,7 @@ void Chip8::EmulateCycle() {
 
 		mRedraw = true;
 		if (mOpcodeLogFunc)
-			mOpcodeLogFunc(StringUtils::Format("0xDXYN: N=%d", mOpcode & 0x000F));
+			mOpcodeLogFunc(StringUtils::Format("0xDXYN: N={}", mOpcode & 0x000F));
 	}
 	break;
 
@@ -419,7 +419,7 @@ void Chip8::EmulateCycle() {
 			if (mKeys[GetVX()] != 0)
 				mPC += 2;
 			if (mOpcodeLogFunc)
-				mOpcodeLogFunc(StringUtils::Format("0xEX9E: VX=%d Key[VX]=%d", GetVX(), mKeys[GetVX()]));
+				mOpcodeLogFunc(StringUtils::Format("0xEX9E: VX={} Key[VX]={}", GetVX(), mKeys[GetVX()]));
 		}
 		break;
 
@@ -428,7 +428,7 @@ void Chip8::EmulateCycle() {
 			if (mKeys[GetVX()] == 0)
 				mPC += 2;
 			if (mOpcodeLogFunc)
-				mOpcodeLogFunc(StringUtils::Format("0xEXA1: VX=%d Key[VX]=%d", GetVX(), mKeys[GetVX()]));
+				mOpcodeLogFunc(StringUtils::Format("0xEXA1: VX={} Key[VX]={}", GetVX(), mKeys[GetVX()]));
 		}
 		break;
 		}
@@ -442,7 +442,7 @@ void Chip8::EmulateCycle() {
 		case 0x0007: // 0xFX07 Sets VX to the value of the delay timer.
 			SetVX(mDelayTimer);
 			if (mOpcodeLogFunc)
-				mOpcodeLogFunc(StringUtils::Format("0xFX07: DelayTimer=%d", mDelayTimer));
+				mOpcodeLogFunc(StringUtils::Format("0xFX07: DelayTimer={}", mDelayTimer));
 			break;
 
 		/*
@@ -467,20 +467,20 @@ void Chip8::EmulateCycle() {
 				mPC -= 2;
 
 			if (mOpcodeLogFunc)
-				mOpcodeLogFunc(StringUtils::Format("0xFX0A: key pressed=%d", keyPressed));
+				mOpcodeLogFunc(StringUtils::Format("0xFX0A: key pressed={}", keyPressed));
 		}
 		break;
 
 		case 0x0015: // 0xFX15 Sets delay timer to VX.
 			mDelayTimer = GetVX();
 			if (mOpcodeLogFunc)
-				mOpcodeLogFunc(StringUtils::Format("0xFX15: DelayTimer=%d", mDelayTimer));
+				mOpcodeLogFunc(StringUtils::Format("0xFX15: DelayTimer={}", mDelayTimer));
 			break;
 
 		case 0x0018: // 0xFX18 Sets sound timer to VX.
 			mSoundTimer = GetVX();
 			if (mOpcodeLogFunc)
-				mOpcodeLogFunc(StringUtils::Format("0xFX18: SoundTimer=%d", mSoundTimer));
+				mOpcodeLogFunc(StringUtils::Format("0xFX18: SoundTimer={}", mSoundTimer));
 			break;
 
 		case 0x001E: // 0xFX1E Adds VX to I
@@ -489,20 +489,20 @@ void Chip8::EmulateCycle() {
 			else
 				SetVF(0);
 			if (mOpcodeLogFunc)
-				mOpcodeLogFunc(StringUtils::Format("0xFX1E: VX=%d I=%d VX+I=%X", GetVX(), mIndexReg, mIndexReg + GetVX()));
+				mOpcodeLogFunc(StringUtils::Format("0xFX1E: VX={} I={:#X} VX+I={:#X}", GetVX(), mIndexReg, mIndexReg + GetVX()));
 			mIndexReg += GetVX();
 			break;
 
 		case 0x0029: // 0xFX29 Sets I to the location of the sprite for the character in VX. Characters 0-F (in hexadecimal) are represented by a 4x5 font.
 			mIndexReg = GetVX() * 5;
 			if (mOpcodeLogFunc)
-				mOpcodeLogFunc(StringUtils::Format("0xFX29: VX=%d I=%d", GetVX(), mIndexReg));
+				mOpcodeLogFunc(StringUtils::Format("0xFX29: VX={} I={}", GetVX(), mIndexReg));
 			break;
 
 		case 0x0030: // 0xFX30 Set I to a large hex character based on the value of VX.
 			mIndexReg = GetVX() * 10 + 80; // 80 is the start of the hi res font
 			if (mOpcodeLogFunc)
-				mOpcodeLogFunc(StringUtils::Format("0xFX30: VX=%d I=%d", GetVX(), mIndexReg));
+				mOpcodeLogFunc(StringUtils::Format("0xFX30: VX={} I={}", GetVX(), mIndexReg));
 			break;
 
 		/*
@@ -520,7 +520,7 @@ void Chip8::EmulateCycle() {
 			mMemory[mIndexReg + 2] = (GetVX() % 100) % 10;
 
 			if (mOpcodeLogFunc)
-				mOpcodeLogFunc(StringUtils::Format("0xFX33: VX=%d", GetVX()));
+				mOpcodeLogFunc(StringUtils::Format("0xFX33: VX={}", GetVX()));
 		}
 		break;
 
@@ -534,7 +534,7 @@ void Chip8::EmulateCycle() {
 				mIndexReg += ((mOpcode & 0x0F00) >> 8) + 1;
 
 			if (mOpcodeLogFunc)
-				mOpcodeLogFunc(StringUtils::Format("0xFX55: I=%X X=%d", mIndexReg, (mOpcode & 0x0F00) >> 8));
+				mOpcodeLogFunc(StringUtils::Format("0xFX55: I={:#X} X={}", mIndexReg, (mOpcode & 0x0F00) >> 8));
 		}
 		break;
 
@@ -548,20 +548,20 @@ void Chip8::EmulateCycle() {
 				mIndexReg += ((mOpcode & 0x0F00) >> 8) + 1;
 
 			if (mOpcodeLogFunc)
-				mOpcodeLogFunc(StringUtils::Format("0xFX65: I=%X X=%d", mIndexReg, (mOpcode & 0x0F00 >> 8)));
+				mOpcodeLogFunc(StringUtils::Format("0xFX65: I={:#X} X={}", mIndexReg, (mOpcode & 0x0F00 >> 8)));
 		}
 		break;
 
 		case 0x0075: // 0xFX75 Save V0-VX to flag registers
 			memcpy(std::data(mRpl), std::data(mV), ((mOpcode & 0x0F00) >> 8) + 1);
 			if (mOpcodeLogFunc)
-				mOpcodeLogFunc(StringUtils::Format("0xFX75: size=%d", ((mOpcode & 0x0F00) >> 8) + 1));
+				mOpcodeLogFunc(StringUtils::Format("0xFX75: size={}", ((mOpcode & 0x0F00) >> 8) + 1));
 			break;
 
 		case 0x0085: // 0xFX85 Restore V0-VX from flag registers
 			memcpy(std::data(mV), std::data(mRpl), ((mOpcode & 0x0F00) >> 8) + 1);
 			if (mOpcodeLogFunc)
-				mOpcodeLogFunc(StringUtils::Format("0xFX85: size=%d", ((mOpcode & 0x0F00) >> 8) + 1));
+				mOpcodeLogFunc(StringUtils::Format("0xFX85: size={}", ((mOpcode & 0x0F00) >> 8) + 1));
 			break;
 		}
 	}
@@ -595,7 +595,7 @@ void Chip8::LoadGame(const std::filesystem::path& game) {
 	}
 
 	const size_t fileSize = std::filesystem::file_size(game);
-	if (fileSize > std::size(mMemory) - 0x200) {
+	if (fileSize > std::size(mMemory) - ProgramMemoryOffset) {
 		const std::string error = "Rom " + game.string() + " is too large to fit in memory";
 		LOG_ERROR(error.c_str());
 		throw std::invalid_argument(error);
@@ -603,7 +603,7 @@ void Chip8::LoadGame(const std::filesystem::path& game) {
 
 	Init();
 
-	f.read((char*)std::data(mMemory) + 0x200, fileSize);
+	f.read((char*)std::data(mMemory) + ProgramMemoryOffset, fileSize);
 
 	mGameFile = game;
 }
@@ -619,7 +619,7 @@ std::string Chip8::Disassemble() {
 	}
 
 	std::string fileProgram;
-	for (int pc = 0x200; pc < 0x200 + fileSize; pc += 2) {
+	for (int pc = 0x200; pc < ProgramMemoryOffset + fileSize; pc += 2) {
 		auto opcode = DisassembleOpcode(std::data(mMemory), pc);
 		fileProgram += opcode + '\n';
 	}
@@ -641,7 +641,7 @@ void Chip8::SaveState(const uint32_t slot) {
 	if (std::empty(mGameFile))
 		return;
 
-	const std::string filepath = StringUtils::Format("Resources/SaveStates/%s_%i.c8state",
+	const std::string filepath = StringUtils::Format("Resources/SaveStates/{}_{}.c8state",
 		mGameFile.stem().string().c_str(), slot);
 	std::ofstream file(filepath, std::ios::out | std::ios::binary);
 	if (!file) {
@@ -674,7 +674,7 @@ void Chip8::LoadState(const uint32_t slot) {
 	if (std::empty(mGameFile))
 		return;
 
-	const std::string filepath = StringUtils::Format("Resources/SaveStates/%s_%i.c8state",
+	const std::string filepath = StringUtils::Format("Resources/SaveStates/{}_{}.c8state",
 		mGameFile.stem().string().c_str(), slot);
 	std::ifstream file(filepath, std::ios::in | std::ios::binary);
 	if (!file) {
@@ -706,25 +706,15 @@ void Chip8::LoadState(const uint32_t slot) {
 }
 
 uint16_t Chip8::GetScreenWidth() const {
-	switch (mGraphicsMode) {
-	case GraphicsMode::e64x32:
-		return 64;
-
-	case GraphicsMode::e128x64:
+	if (mGraphicsMode == GraphicsMode::e128x64)
 		return 128;
-	}
 
 	return 64;
 }
 
 uint16_t Chip8::GetScreenHeight() const {
-	switch (mGraphicsMode) {
-	case GraphicsMode::e64x32:
-		return 32;
-
-	case GraphicsMode::e128x64:
+	if (mGraphicsMode == GraphicsMode::e128x64)
 		return 64;
-	}
 
 	return 32;
 }
@@ -760,7 +750,6 @@ void Chip8::CloseGame() {
 std::string Chip8::DisassembleOpcode(const uint8_t* const buffer, uint16_t pc) {
 	const uint16_t opcode = (buffer[pc] << 8) | buffer[pc + 1];
 
-	char text[32] = {};
 	switch (opcode & 0xF000)
 	{
 	case 0x0000:
@@ -791,139 +780,76 @@ std::string Chip8::DisassembleOpcode(const uint8_t* const buffer, uint16_t pc) {
 
 		// 0x00CN Scroll the display down by 0 to 15 pixels
 		if ((opcode & 0x00F0) == 0x00C0)
-		{
-			snprintf(text, sizeof(text), "0x%04X SCD", opcode);
-			return text;
-		}
+			return StringUtils::Format("{:04#X} SCD", opcode);
 	}
 	break;
 
 	case 0x1000: // 0x1NNN Jump to address NNN
-	{
-		snprintf(text, sizeof(text), "0x%04X JP", opcode);
-		return text;
-	}
+		return StringUtils::Format("{:04#X} JP", opcode);
 
 	case 0x2000: // 0x2NNN Calls subroutine at NNN
-	{
-		snprintf(text, sizeof(text), "0x%04X CALL", opcode);
-		return text;
-	}
+		return StringUtils::Format("{:04#X} CALL", opcode);
 
 	case 0x3000: // 0x3XNN Skips next instruction if VX equals NN
-	{
-		snprintf(text, sizeof(text), "0x%04X SE", opcode);
-		return text;
-	}
+		return StringUtils::Format("{:04#X} SE", opcode);
 
 	case 0x4000: // 0x4XNN Skips next instruction if VX does not equal NN
-	{
-		snprintf(text, sizeof(text), "0x%04X SNE", opcode);
-		return text;
-	}
+		return StringUtils::Format("{:04#X} SNE", opcode);
 
 	case 0x5000: // 0x5XY0 Skips next instruction if VX equals VY
-	{
-		snprintf(text, sizeof(text), "0x%04X SE", opcode);
-		return text;
-	}
+		return StringUtils::Format("{:04#X} SE", opcode);
 
 	case 0x6000: // 0x6XNN Sets VX to NN
-	{
-		snprintf(text, sizeof(text), "0x%04X LD", opcode);
-		return text;
-	}
+		return StringUtils::Format("{:04#X} LD", opcode);
 
 	case 0x7000: // 0x7XNN Adds NN to VX (Carry flag is not changed)
-	{
-		snprintf(text, sizeof(text), "0x%04X ADD", opcode);
-		return text;
-	}
+		return StringUtils::Format("{:04#X} ADD", opcode);
 
 	case 0x8000:
 	{
 		switch (opcode & 0x000F)
 		{
 		case 0x0000: // 0x8XY0 Set VX to VY
-		{
-			snprintf(text, sizeof(text), "0x%04X LD", opcode);
-			return text;
-		}
+			return StringUtils::Format("{:04#X} LD", opcode);
 
 		case 0x0001: // 0x8XY1 Set VX to VX or VY
-		{
-			snprintf(text, sizeof(text), "0x%04X OR", opcode);
-			return text;
-		}
+			return StringUtils::Format("{:04#X} OR", opcode);
 
 		case 0x0002: // 0x8XY2 Set VX to VX and VY
-		{
-			snprintf(text, sizeof(text), "0x%04X AND", opcode);
-			return text;
-		}
+			return StringUtils::Format("{:04#X} AND", opcode);
 
 		case 0x0003: // 0x8XY3 Set VX to VX xor VY
-		{
-			snprintf(text, sizeof(text), "0x%04X XOR", opcode);
-			return text;
-		}
+			return StringUtils::Format("{:04#X} XOR", opcode);
 
 		case 0x0004: // 0x8XY4 Adds VY to VX. VF is set when there's a carry
-		{
-			snprintf(text, sizeof(text), "0x%04X ADD", opcode);
-			return text;
-		}
+			return StringUtils::Format("{:04#X} ADD", opcode);
 
 		case 0x0005: // 0x8XY5 VY is subtracted from VX. VF is set to 0 if borrow
-		{
-			snprintf(text, sizeof(text), "0x%04X SUB", opcode);
-			return text;
-		}
+			return StringUtils::Format("{:04#X} SUB", opcode);
 
 		case 0x0006: // 0x8XY6 Stores the least significant bit of VX in VF and then shifts VX to the right by 1.
-		{
-			snprintf(text, sizeof(text), "0x%04X SHR", opcode);
-			return text;
-		}
+			return StringUtils::Format("{:04#X} SHR", opcode);
 
 		case 0x0007: // 0x8XY7 Sets VX to VY minus VX. VF is set to 0 when there's a borrow, and 1 when there isn't.
-		{
-			snprintf(text, sizeof(text), "0x%04X SUBN", opcode);
-			return text;
-		}
+			return StringUtils::Format("{:04#X} SUBN", opcode);
 
 		case 0x000E: // 0x8XYE Stores the most significant bit of VX in VF and then shifts VX to the left by 1.
-		{
-			snprintf(text, sizeof(text), "0x%04X SHL", opcode);
-			return text;
-		}
+			return StringUtils::Format("{:04#X} SHL", opcode);
 		}
 	}
 	break;
 
 	case 0x9000: // 0x9XY0 Skips the next instruction if VX does not equal VY
-	{
-		snprintf(text, sizeof(text), "0x%04X SNE", opcode);
-		return text;
-	}
+		return StringUtils::Format("{:04#X} SNE", opcode);
 
 	case 0xA000: // 0xANNN Sets I to the address NNN
-	{
-		snprintf(text, sizeof(text), "0x%04X LD", opcode);
-		return text;
-	}
+		return StringUtils::Format("{:04#X} LD", opcode);
 
 	case 0xB000: // 0xBNNN Jumps to the address NNN plus V0
-	{
-		snprintf(text, sizeof(text), "0x%04X JP", opcode);
-		return text;
-	}
+		return StringUtils::Format("{:04#X} JP", opcode);
 
 	case 0xC000: // 0xCXNN Sets VX to the result of bitwise and op on a random number and NN
-	{
-		snprintf(text, sizeof(text), "0x%04X RND", opcode);
-		return text;
-	}
+		return StringUtils::Format("{:04#X} RND", opcode);
 
 	/*
 	 * 0xDXYN
@@ -933,26 +859,17 @@ std::string Chip8::DisassembleOpcode(const uint8_t* const buffer, uint16_t pc) {
 	 * are flipped from set to unset when the sprite is drawn, and to 0 if that does not happen
 	 */
 	case 0xD000:
-	{
-		snprintf(text, sizeof(text), "0x%04X DRW", opcode);
-		return text;
-	}
+		return StringUtils::Format("{:04#X} DRW", opcode);
 
 	case 0xE000:
 	{
 		switch (opcode & 0x00FF)
 		{
 		case 0x009E: // 0xEX9E Skips the next instruction if the key stored in VX is pressed.
-		{
-			snprintf(text, sizeof(text), "0x%04X SKP", opcode);
-			return text;
-		}
+			return StringUtils::Format("{:04#X} SKP", opcode);
 
 		case 0x00A1: // 0xEXA1 Skips the next instruction if the key stored in VX is not pressed.
-		{
-			snprintf(text, sizeof(text), "0x%04X SKNP", opcode);
-			return text;
-		}
+			return StringUtils::Format("{:04#X} SKNP", opcode);
 		}
 	}
 	break;
@@ -962,93 +879,56 @@ std::string Chip8::DisassembleOpcode(const uint8_t* const buffer, uint16_t pc) {
 		switch (opcode & 0x00FF)
 		{
 		case 0x0007: // 0xFX07 Sets VX to the value of the delay timer.
-		{
-			snprintf(text, sizeof(text), "0x%04X LD", opcode);
-			return text;
-		}
+			return StringUtils::Format("{:04#X} LD", opcode);
 
-			/*
-			* 0xFX0A A key press is awaited, and then stored in VX.
-			* (Blocking Operation. All instruction halted until next key event);
-			*/
+		/*
+		* 0xFX0A A key press is awaited, and then stored in VX.
+		* (Blocking Operation. All instruction halted until next key event);
+		*/
 		case 0x000A:
-		{
-			snprintf(text, sizeof(text), "0x%04X LD", opcode);
-			return text;
-		}
+			return StringUtils::Format("{:04#X} LD", opcode);
 
 		case 0x0015: // 0xFX15 Sets delay timer to VX.
-		{
-			snprintf(text, sizeof(text), "0x%04X LD", opcode);
-			return text;
-		}
+			return StringUtils::Format("{:04#X} LD", opcode);
 
 		case 0x0018: // 0xFX18 Sets sound timer to VX.
-		{
-			snprintf(text, sizeof(text), "0x%04X LD", opcode);
-			return text;
-		}
+			return StringUtils::Format("{:04#X} LD", opcode);
 
 		case 0x001E: // 0xFX1E Adds VX to I
-		{
-			snprintf(text, sizeof(text), "0x%04X ADD", opcode);
-			return text;
-		}
+			return StringUtils::Format("{:04#X} ADD", opcode);
 
 		case 0x0029: // 0xFX29 Sets I to the location of the sprite for the character in VX. Characters 0-F (in hexadecimal) are represented by a 4x5 font.
-		{
-			snprintf(text, sizeof(text), "0x%04X LD", opcode);
-			return text;
-		}
+			return StringUtils::Format("{:04#X} LD", opcode);
 
 		case 0x0030: // 0xFX30 Set I to a large hex character based on the value of VX.
-		{
-			snprintf(text, sizeof(text), "0x%04X LD", opcode);
-			return text;
-		}
+			return StringUtils::Format("{:04#X} LD", opcode);
 
-			/*
-			 * 0xFX33
-			 *
-			 * Stores the binary-coded decimal representation of VX, with the most significant of three digits
-			 * at the address in I, the middle digit at I plus 1, and the least significant digit at I plus 2.
-			 * (In other words, take the decimal representation of VX, place the hundreds digit in memory at
-			 * location in I, the tens digit at location I+1, and the ones digit at location I+2.)
-			 */
+		/*
+		* 0xFX33
+		*
+		* Stores the binary-coded decimal representation of VX, with the most significant of three digits
+		* at the address in I, the middle digit at I plus 1, and the least significant digit at I plus 2.
+		* (In other words, take the decimal representation of VX, place the hundreds digit in memory at
+		* location in I, the tens digit at location I+1, and the ones digit at location I+2.)
+		*/
 		case 0x0033:
-		{
-			snprintf(text, sizeof(text), "0x%04X LD", opcode);
-			return text;
-		}
+			return StringUtils::Format("{:04#X} LD", opcode);
 
 		case 0x0055: // 0xFX55 Stores V0 to VX (including VX) in memory starting at address I
-		{
-			snprintf(text, sizeof(text), "0x%04X LD", opcode);
-			return text;
-		}
+			return StringUtils::Format("{:04#X} LD", opcode);
 
 		case 0x0065: // 0xFX65 Fills V0 to VX (including VX) with values from memory starting at address I
-		{
-			snprintf(text, sizeof(text), "0x%04X LD", opcode);
-			return text;
-		}
+			return StringUtils::Format("{:04#X} LD", opcode);
 
 		case 0x0075: // 0xFX75 Save V0-VX to flag registers
-		{
-			snprintf(text, sizeof(text), "0x%04X LD", opcode);
-			return text;
-		}
+			return StringUtils::Format("{:04#X} LD", opcode);
 
 		case 0x0085: // 0xFX85 Restore V0-VX from flag registers
-		{
-			snprintf(text, sizeof(text), "0x%04X LD", opcode);
-			return text;
-		}
+			return StringUtils::Format("{:04#X} LD", opcode);
 		}
 	}
 	break;
 	}
 
-	snprintf(text, sizeof(text), "0x%04X UNKNOWN", opcode);
-	return text;
+	return StringUtils::Format("{:04#X} UNKNOWN", opcode);
 }
