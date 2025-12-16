@@ -28,7 +28,7 @@ struct Vertex
 
 Application::~Application()
 {
-    Shutdown();
+    //Shutdown();
 }
 
 bool Application::Init()
@@ -103,6 +103,8 @@ bool Application::Init()
 void Application::Shutdown()
 {
     SaveEmulatorSettings();
+
+	mImGuiWindows.clear();
 
     if (mImGuiInitialized)
     {
@@ -554,7 +556,7 @@ void Application::RenderDialogs()
 
 void Application::LoadGame()
 {
-	IGFD::FileDialogConfig config = {
+	const IGFD::FileDialogConfig config = {
 		.path = "res/games",
 		.countSelectionMax = 1
 	};

@@ -2,11 +2,11 @@
 
 #include <string>
 
-class ImGuiWindow
+class BaseImGuiWindow
 {
 public:
-    ImGuiWindow(const std::string& title, const std::string& saveId, bool isOpen = false);
-    virtual ~ImGuiWindow() {}
+    BaseImGuiWindow(const std::string& title, const std::string& saveId, bool isOpen = false);
+    virtual ~BaseImGuiWindow() {}
 
     const std::string& GetTitle() const { return mTitle; }
     void SetTitle(const std::string& title) { mTitle = title; }

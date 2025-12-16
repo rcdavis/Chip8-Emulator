@@ -14,7 +14,7 @@
 #include <filesystem>
 
 struct GLFWwindow;
-class ImGuiWindow;
+class BaseImGuiWindow;
 
 class Application
 {
@@ -76,7 +76,7 @@ private:
     OpenGLFramebuffer mFrameBuffer;
     OpenGLTexture mTexture;
 
-    std::vector<Ref<ImGuiWindow>> mImGuiWindows;
+    std::vector<Ref<BaseImGuiWindow>> mImGuiWindows;
 
     MemoryEditor mMemoryEditor;
     MemoryEditor mVramEditor;

@@ -1,13 +1,13 @@
 #pragma once
 
-#include "ImGuiWindow.h"
+#include "ImGuiWindows/BaseImGuiWindow.h"
 
 #include <string>
 #include <vector>
 
 struct GLFWwindow;
 
-class OpcodeLogWindow : public ImGuiWindow
+class OpcodeLogWindow : public BaseImGuiWindow
 {
 public:
     OpcodeLogWindow(bool isOpen = false);

@@ -54,8 +54,8 @@ target_include_directories(imgui PUBLIC
 add_executable(Editor
     glad/src/gl.c
     ImGuiFileDialog/src/ImGuiFileDialog.cpp
+    src/ImGuiWindows/BaseImGuiWindow.cpp
     src/ImGuiWindows/Chip8InfoWindow.cpp
-    src/ImGuiWindows/ImGuiWindow.cpp
     src/ImGuiWindows/OpcodeLogWindow.cpp
     src/OpenGL/OpenGLFramebuffer.cpp
     src/OpenGL/OpenGLShader.cpp
