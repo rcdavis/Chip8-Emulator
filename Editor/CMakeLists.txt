@@ -24,10 +24,15 @@ FetchContent_MakeAvailable(spdlog)
 
 add_executable(Editor
     glad/src/gl.c
+    src/OpenGL/GLShader.cpp
     src/Utils/Log.cpp
+    src/Chip8.cpp
     src/Editor.cpp
     src/Main.cpp
 )
+
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/res
+     DESTINATION ${CMAKE_BINARY_DIR}/Editor)
 
 target_compile_definitions(Editor PUBLIC
     GLFW_INCLUDE_NONE

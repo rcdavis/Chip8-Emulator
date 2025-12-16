@@ -6,7 +6,7 @@ int main(int argc, char** argv) {
 	Log::Init();
 
 	Editor editor;
-	if (!editor.Init())
+	if (!editor.Init(argc, argv))
 		return -1;
 
 	editor.Run();
