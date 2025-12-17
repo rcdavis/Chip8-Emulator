@@ -3,6 +3,14 @@
 #include <memory>
 #include <cstdint>
 
+#if defined(_MSC_VER)
+	#define RESTRICT __restrict
+#elif defined(__clang__) || defined(__GNUC__)
+	#define RESTRICT __restrict__
+#else
+	#define RESTRICT
+#endif
+
 template <typename T>
 using Scope = std::unique_ptr<T>;
 

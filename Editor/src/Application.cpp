@@ -15,15 +15,7 @@
 #include <fstream>
 #include <array>
 
-constexpr char* LoadGameFileDialogKey = "LoadGame";
-
-struct Vertex {
-	float posX = 0.0f;
-	float posY = 0.0f;
-
-	float texCoordU = 0.0f;
-	float texCoordV = 0.0f;
-};
+constexpr const char* LoadGameFileDialogKey = "LoadGame";
 
 Application::~Application() {
 	Shutdown();
@@ -230,16 +222,16 @@ void Application::ErrorCallback(int error, const char* description) {
 
 void Application::InitVertexBuffer() {
 	// 2 for position, 2 for texture coordinates
-	constexpr std::array<Vertex, 4> vertices = {{
-		{ -1.0f, -1.0f, 0.0f, 1.0f },
-		{ 1.0f, -1.0f, 1.0f, 1.0f },
-		{ 1.0f, 1.0f, 1.0f, 0.0f },
-		{ -1.0f, 1.0f, 0.0f, 0.0f }
-	}};
+	constexpr std::array<float, 4 * 4> vertices = {
+		-1.0f, -1.0f, 0.0f, 1.0f,
+		1.0f, -1.0f, 1.0f, 1.0f,
+		1.0f, 1.0f, 1.0f, 0.0f,
+		-1.0f, 1.0f, 0.0f, 0.0f
+	};
 
 	glGenBuffers(1, &mVertexBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * std::size(vertices),
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * std::size(vertices),
 		std::data(vertices), GL_STATIC_DRAW);
 }
 
@@ -256,7 +248,7 @@ void Application::InitIndexBuffer() {
 }
 
 void Application::InitShader() {
-	constexpr char* vertexSrc = "#version 460 core\n"
+	constexpr const char* vertexSrc = "#version 460 core\n"
 		"layout(location = 0) in vec2 a_Position;\n"
 		"layout(location = 1) in vec2 a_TexCoord;\n"
 		"layout(location = 0) out vec2 v_TexCoord;\n"
@@ -265,7 +257,7 @@ void Application::InitShader() {
 		"gl_Position = vec4(a_Position, 0.0, 1.0);\n"
 		"}";
 
-	constexpr char* fragmentSrc = "#version 460 core\n"
+	constexpr const char* fragmentSrc = "#version 460 core\n"
 		"layout(location = 0) in vec2 v_TexCoord;\n"
 		"out vec4 color;\n"
 		"layout(binding = 0) uniform sampler2D u_Texture;\n"
@@ -275,8 +267,8 @@ void Application::InitShader() {
 
 	mShader.Create(vertexSrc, fragmentSrc);
 	mShader.Bind();
-	mShader.SetVertexAttribf("a_Position", 2, sizeof(Vertex));
-	mShader.SetVertexAttribf("a_TexCoord", 2, sizeof(Vertex), sizeof(float) * 2);
+	mShader.SetVertexAttribf("a_Position", 2, sizeof(float) * 4);
+	mShader.SetVertexAttribf("a_TexCoord", 2, sizeof(float) * 4, sizeof(float) * 2);
 }
 
 void Application::InitImGui() {
@@ -459,7 +451,7 @@ void Application::ImGuiMainMenuRender() {
 			ImGui::Separator();
 			if (ImGui::MenuItem("Disassemble", nullptr, nullptr, !std::empty(mChip8.GetGameFile()))) {
 				auto text = mChip8.Disassemble();
-				FileUtils::WriteText("Resources/TestOpCodes.txt", text);
+				FileUtils::WriteText("res/disassemble/TestOpCodes.txt", text);
 			}
 
 			ImGui::Separator();

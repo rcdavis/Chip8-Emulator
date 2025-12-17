@@ -11,16 +11,16 @@
 Chip8::Chip8() {
 	srand((unsigned int)time(0));
 
-	memset(std::data(mRpl), 0, std::size(mRpl));
+	mRpl.fill(0);
 
 	Init();
 }
 
 void Chip8::Init() {
-	memset(std::data(mMemory), 0, std::size(mMemory));
-	memset(std::data(mV), 0, std::size(mV));
-	memset(std::data(mStack), 0, std::size(mStack) * sizeof(uint16_t));
-	memset(std::data(mKeys), 0, std::size(mKeys));
+	mMemory.fill(0);
+	mV.fill(0);
+	mStack.fill(0);
+	mKeys.fill(0);
 
 	mVram.resize(GetScreenWidth() * GetScreenHeight());
 	memset(std::data(mVram), 0, std::size(mVram));
@@ -636,12 +636,12 @@ std::vector<uint32_t> Chip8::GetVramImage() {
 }
 
 void Chip8::SaveState(const uint32_t slot) {
-	std::filesystem::create_directories("Resources/SaveStates");
+	std::filesystem::create_directories("res/savestates");
 
 	if (std::empty(mGameFile))
 		return;
 
-	const std::string filepath = StringUtils::Format("Resources/SaveStates/{}_{}.c8state",
+	const std::string filepath = StringUtils::Format("res/savestates/{}_{}.c8state",
 		mGameFile.stem().string().c_str(), slot);
 	std::ofstream file(filepath, std::ios::out | std::ios::binary);
 	if (!file) {
@@ -674,7 +674,7 @@ void Chip8::LoadState(const uint32_t slot) {
 	if (std::empty(mGameFile))
 		return;
 
-	const std::string filepath = StringUtils::Format("Resources/SaveStates/{}_{}.c8state",
+	const std::string filepath = StringUtils::Format("res/savestates/{}_{}.c8state",
 		mGameFile.stem().string().c_str(), slot);
 	std::ifstream file(filepath, std::ios::in | std::ios::binary);
 	if (!file) {

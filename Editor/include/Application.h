@@ -59,7 +59,7 @@ private:
 	Ref<T> GetImGuiWindow();
 
 private:
-	enum class Theme {
+	enum class Theme : uint8_t {
 		Light,
 		Dark
 	};

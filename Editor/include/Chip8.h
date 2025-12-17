@@ -16,7 +16,7 @@ public:
 	using RenderFunc = std::function<void(const std::vector<uint32_t>&)>;
 	using OpcodeLogFunc = std::function<void(const std::string&)>;
 
-	enum class GraphicsMode {
+	enum class GraphicsMode : uint8_t {
 		e64x32,
 		e128x64
 	};
@@ -130,7 +130,7 @@ private:
 
 	uint8_t mEmuSpeedModifier = 1;
 
-	bool mRedraw;
+	bool mRedraw = false;
 
 	bool mUseVYForShiftQuirk = false;
 	bool mUseBXNNQuirk = false;
